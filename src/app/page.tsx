@@ -18,57 +18,22 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Hero */}
+      {/* Hero — clean, single focus */}
       <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-16 px-4">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold leading-tight">
             Find Trusted Home Pros in Johnson County
           </h1>
-          <p className="mt-4 text-lg text-blue-200 max-w-2xl">
-            Compare the best HVAC, plumbing, roofing, landscaping, and home
-            service professionals in Overland Park, Olathe, Lenexa, and across
-            JoCo.
+          <p className="mt-4 text-lg text-blue-200 max-w-2xl mx-auto">
+            Compare the best HVAC, plumbing, roofing, landscaping, and home service professionals across JoCo.
           </p>
-          <div className="mt-8 flex gap-4 flex-wrap">
-            <a
-              href="/categories"
-              className="bg-white text-blue-700 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition"
-            >
-              Browse All Services
-            </a>
-            <a
-              href="/cities"
-              className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/10 transition"
-            >
-              Browse by City
-            </a>
-          </div>
         </div>
       </section>
 
-      {/* Search */}
-      <section className="bg-blue-50 py-8 px-4">
-        <div className="max-w-2xl mx-auto flex gap-2">
-          <input
-            type="text"
-            placeholder="What service do you need?"
-            className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg text-base focus:border-blue-600 focus:outline-none"
-          />
-          <input
-            type="text"
-            placeholder="City"
-            className="w-40 px-4 py-3 border-2 border-gray-300 rounded-lg text-base focus:border-blue-600 focus:outline-none"
-          />
-          <button className="bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-800 transition">
-            Search
-          </button>
-        </div>
-      </section>
-
-      {/* Categories */}
+      {/* Categories — 4x4 grid */}
       <section className="max-w-5xl mx-auto py-12 px-4">
         <h2 className="text-2xl font-bold mb-6">Browse by Service</h2>
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {categories.map((cat: any) => (
             <a
               key={cat.slug}
@@ -84,14 +49,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Cities */}
+      {/* Cities — clean cards, no population */}
       <section className="bg-gray-50 py-12 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl font-bold mb-2">Browse by City</h2>
           <p className="text-gray-600 mb-6">
-            Serving all 9 cities in Johnson County, KS
+            Serving all of Johnson County, Kansas
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-4">
             {cities.map((city: any) => (
               <a
                 key={city.slug}
@@ -99,66 +64,38 @@ export default async function HomePage() {
                 className="border bg-white rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition"
               >
                 <h3 className="font-semibold">{city.name}</h3>
+                {city.description && (
+                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">{city.description}</p>
+                )}
               </a>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Popular Searches */}
+      {/* Trust — brief, 3 columns */}
       <section className="max-w-5xl mx-auto py-12 px-4">
-        <h2 className="text-2xl font-bold mb-6">
-          Popular Searches in Johnson County
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {categories.slice(0, 6).map((cat: any) => {
-            const topCity = cities[0]; // Overland Park
-            return (
-              <a
-                key={`${cat.slug}-${topCity.slug}`}
-                href={`/${cat.slug}/${topCity.slug}`}
-                className="border rounded-lg p-4 flex justify-between items-center hover:border-blue-400 hover:shadow-md transition"
-              >
-                <span className="font-medium">
-                  Best {cat.name.split(" ")[0]} in {topCity.name}
-                </span>
-                <span className="text-gray-400">→</span>
-              </a>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Trust */}
-      <section className="bg-blue-50 py-12 px-4">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold mb-8">Why JoCo Home Pros?</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div>
-              <div className="text-4xl mb-2">✓</div>
-              <h3 className="font-semibold">Verified Local Businesses</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                Every listing is a real business serving Johnson County. No
-                national call centers — just local pros who know your
-                neighborhood.
-              </p>
-            </div>
-            <div>
-              <div className="text-4xl mb-2">⭐</div>
-              <h3 className="font-semibold">Ratings & Reviews</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                See what your neighbors say. We aggregate ratings from multiple
-                sources so you can make informed decisions.
-              </p>
-            </div>
-            <div>
-              <div className="text-4xl mb-2">📍</div>
-              <h3 className="font-semibold">Built for Johnson County</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                We focus exclusively on Johnson County, Kansas — from Overland
-                Park to De Soto. No irrelevant results.
-              </p>
-            </div>
+        <div className="grid md:grid-cols-3 gap-8">
+          <div>
+            <div className="text-3xl mb-2">✓</div>
+            <h3 className="font-semibold">Verified Local Businesses</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Real businesses serving Johnson County — no national call centers.
+            </p>
+          </div>
+          <div>
+            <div className="text-3xl mb-2">⭐</div>
+            <h3 className="font-semibold">Ratings & Reviews</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              See what your neighbors say. Aggregated ratings from multiple sources.
+            </p>
+          </div>
+          <div>
+            <div className="text-3xl mb-2">📍</div>
+            <h3 className="font-semibold">Built for Johnson County</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Exclusively JoCo — from Overland Park to De Soto.
+            </p>
           </div>
         </div>
       </section>
