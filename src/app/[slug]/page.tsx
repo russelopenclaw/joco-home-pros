@@ -1,195 +1,134 @@
-import { categories } from "@/lib/categories";
-import { cities } from "@/lib/cities";
+import { getCategoryBySlug, getCityBySlug, getCategories, getCities } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
 import type { Metadata } from "next";
 
-// Generate params for both categories and cities (they share the [slug] route)
-export function generateStaticParams() {
-  const categoryParams = categories.map((cat) => ({ slug: cat.slug }));
-  const cityParams = cities.map((city) => ({ slug: city.slug }));
-  return [...categoryParams, ...cityParams];
+export const revalidate = 3600;
+
+type Params = { slug: string };
+
+export async function generateStaticParams(): Promise<Params[]> {
+  const [categories, cities] = await Promise.all([getCategories(), getCities()]);
+  const params: Params[] = [];
+  for (const cat of categories) params.push({ slug: cat.slug });
+  for (const city of cities) params.push({ slug: city.slug });
+  return params;
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
+  const cat = await getCategoryBySlug(slug).catch(() => null);
+  const city = await getCityBySlug(slug).catch(() => null);
 
-  // Check if this is a category
-  const category = categories.find((c) => c.slug === slug);
-  if (category) {
+  if (cat) {
     return generatePageSEO({
-      title: `Best ${category.name} in Johnson County, KS`,
-      description: category.description,
-      path: `/${category.slug}`,
+      title: `Best ${cat.name} in Johnson County, KS — JoCo Home Pros`,
+      description: cat.description,
+      path: `/${cat.slug}`,
     });
   }
-
-  // Check if this is a city
-  const city = cities.find((c) => c.slug === slug);
   if (city) {
     return generatePageSEO({
-      title: `Home Services in ${city.name}, KS — Johnson County`,
-      description: `Find the best home service professionals in ${city.name}, Kansas. HVAC, plumbing, roofing, landscaping, and more — trusted local businesses serving ${city.name} and Johnson County.`,
+      title: `Home Services in ${city.name}, KS — JoCo Home Pros`,
+      description: `Find trusted home service professionals in ${city.name}, Kansas. HVAC, plumbing, roofing, landscaping, and more.`,
       path: `/${city.slug}`,
     });
   }
-
   return {};
 }
 
-export default async function SlugPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function SlugPage({ params }: { params: Params }) {
   const { slug } = await params;
+  const cat = await getCategoryBySlug(slug).catch(() => null);
+  const city = await getCityBySlug(slug).catch(() => null);
+  const [categories, cities] = await Promise.all([getCategories(), getCities()]);
 
-  // Render category page
-  const category = categories.find((c) => c.slug === slug);
-  if (category) {
-    return <CategoryView category={category} />;
+  const categoryEmojis: Record<string, string> = {
+    hvac: "🌡️", plumbing: "🔧", roofing: "🏠", landscaping: "🌿",
+    electrician: "⚡", painting: "🎨", "garage-door": "🚪", "tree-service": "🌲",
+    windows: "🪟", "pest-control": "🐛", "auto-repair": "🚗", dentist: "😁",
+    movers: "📦", cleaning: "✨", pool: "🏊",
+  };
+
+  if (cat) {
+    // Category page
+    return (
+      <>
+        <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-12 px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-blue-200 text-sm mb-2">
+              <a href="/" className="hover:text-white">Home</a> › <span>{cat.name}</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold">Best {cat.name} in Johnson County, KS</h1>
+            <p className="mt-4 text-blue-200 max-w-2xl">{cat.description}</p>
+          </div>
+        </section>
+
+        <section className="max-w-5xl mx-auto py-12 px-4">
+          <h2 className="text-2xl font-bold mb-6">Browse {cat.name} by City</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {cities.map((c: any) => (
+              <a key={c.slug} href={`/${cat.slug}/${c.slug}`}
+                className="border rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition">
+                <h3 className="font-semibold">{cat.name} in {c.name}</h3>
+                <p className="text-sm text-gray-500">Pop. {c.population.toLocaleString()}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section className="max-w-5xl mx-auto pb-12 px-4">
+          <h2 className="text-2xl font-bold mb-6">Also in Johnson County</h2>
+          <div className="flex flex-wrap gap-2">
+            {categories.filter((c: any) => c.slug !== cat.slug).map((c: any) => (
+              <a key={c.slug} href={`/${c.slug}`}
+                className="bg-blue-50 text-blue-700 px-3 py-1 rounded text-sm font-medium hover:bg-blue-100 transition">
+                {categoryEmojis[c.slug] || "🔧"} {c.name}
+              </a>
+            ))}
+          </div>
+        </section>
+      </>
+    );
   }
 
-  // Render city page
-  const city = cities.find((c) => c.slug === slug);
   if (city) {
-    return <CityView city={city} />;
+    // City page
+    return (
+      <>
+        <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-12 px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-blue-200 text-sm mb-2">
+              <a href="/" className="hover:text-white">Home</a> › <span>{city.name}</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold">Home Services in {city.name}, KS</h1>
+            <p className="mt-4 text-blue-200 max-w-2xl">
+              Find trusted home service professionals in {city.name}, Kansas (pop. {city.population.toLocaleString()}).
+            </p>
+          </div>
+        </section>
+
+        <section className="max-w-5xl mx-auto py-12 px-4">
+          <h2 className="text-2xl font-bold mb-6">All Services in {city.name}</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {categories.map((c: any) => (
+              <a key={c.slug} href={`/${c.slug}/${city.slug}`}
+                className="border rounded-lg p-4 text-center hover:border-blue-400 hover:shadow-md transition">
+                <div className="text-3xl mb-2">{categoryEmojis[c.slug] || "🔧"}</div>
+                <h3 className="font-semibold text-sm">{c.name}</h3>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {city.description && (
+          <section className="max-w-5xl mx-auto pb-12 px-4">
+            <h2 className="text-2xl font-bold mb-4">About {city.name}</h2>
+            <p className="text-gray-600 leading-relaxed">{city.description}</p>
+          </section>
+        )}
+      </>
+    );
   }
 
-  return <div>Page not found</div>;
-}
-
-function CategoryView({ category }: { category: (typeof categories)[number] }) {
-  return (
-    <div>
-      <section className="bg-gradient-to-br from-blue-700 to-blue-900 py-12 text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <nav className="text-sm text-blue-200">
-            <a href="/" className="hover:text-white">Home</a>
-            <span className="mx-2">›</span>
-            <span>{category.name}</span>
-          </nav>
-          <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-            Best {category.name} in Johnson County, KS
-          </h1>
-          <p className="mt-3 text-lg text-blue-100">{category.description}</p>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <h2 className="text-xl font-bold text-gray-900">
-          Browse {category.name} by City
-        </h2>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3">
-          {cities.map((city) => (
-            <a
-              key={city.id}
-              href={`/${category.slug}/${city.slug}`}
-              className="group rounded-lg border border-gray-200 bg-white p-4 transition hover:border-blue-300 hover:shadow-md"
-            >
-              <h3 className="font-semibold text-gray-900 group-hover:text-blue-700">
-                {category.name} in {city.name}
-              </h3>
-              <p className="text-sm text-gray-500">
-                Pop. {city.population.toLocaleString()}
-              </p>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            name: `Best ${category.name} in Johnson County, KS`,
-            description: category.description,
-            url: `https://jocohomepros.com/${category.slug}`,
-            breadcrumb: {
-              "@type": "BreadcrumbList",
-              itemListElement: [
-                { "@type": "ListItem", position: 1, name: "Home", item: "https://jocohomepros.com" },
-                { "@type": "ListItem", position: 2, name: category.name },
-              ],
-            },
-          }),
-        }}
-      />
-    </div>
-  );
-}
-
-function CityView({ city }: { city: (typeof cities)[number] }) {
-  return (
-    <div>
-      <section className="bg-gradient-to-br from-blue-700 to-blue-900 py-12 text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <nav className="text-sm text-blue-200">
-            <a href="/" className="hover:text-white">Home</a>
-            <span className="mx-2">›</span>
-            <span>{city.name}</span>
-          </nav>
-          <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
-            Home Services in {city.name}, KS
-          </h1>
-          <p className="mt-3 text-lg text-blue-100">
-            Find trusted professionals for every home service need in {city.name}, Kansas.
-            Population: {city.population.toLocaleString()}.
-          </p>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <h2 className="text-xl font-bold text-gray-900">
-          Browse Services in {city.name}
-        </h2>
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {categories.map((cat) => (
-            <a
-              key={cat.id}
-              href={`/${cat.slug}/${city.slug}`}
-              className="group rounded-lg border border-gray-200 bg-white p-4 text-center transition hover:border-blue-300 hover:shadow-md"
-            >
-              <h3 className="font-semibold text-gray-900 group-hover:text-blue-700">
-                {cat.name}
-              </h3>
-              <p className="mt-1 text-xs text-gray-500">in {city.name}</p>
-            </a>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-gray-100 py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h3 className="text-lg font-bold text-gray-900">About {city.name}</h3>
-          <p className="mt-2 text-gray-600">{city.description}</p>
-        </div>
-      </section>
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "CollectionPage",
-            name: `Home Services in ${city.name}, KS`,
-            description: `Directory of home service professionals in ${city.name}, Kansas`,
-            url: `https://jocohomepros.com/${city.slug}`,
-            breadcrumb: {
-              "@type": "BreadcrumbList",
-              itemListElement: [
-                { "@type": "ListItem", position: 1, name: "Home", item: "https://jocohomepros.com" },
-                { "@type": "ListItem", position: 2, name: city.name },
-              ],
-            },
-          }),
-        }}
-      />
-    </div>
-  );
+  return <div className="max-w-5xl mx-auto py-12 px-4"><h1 className="text-2xl font-bold">Page not found</h1></div>;
 }

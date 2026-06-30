@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JoCo Home Pros — Find Trusted Home Services in Johnson County, KS</title>
+<meta name="description" content="Find the best home service professionals in Johnson County, Kansas. Trusted HVAC, plumbing, roofing, landscaping, and more in Overland Park, Olathe, Lenexa, Leawood, and beyond.">
+<meta property="og:title" content="JoCo Home Pros — Find Trusted Home Services in Johnson County, KS">
+<meta property="og:description" content="Compare trusted HVAC, plumbing, roofing, landscaping, and home service professionals in Overland Park, Olathe, Lenexa, and across Johnson County.">
+<meta property="og:type" content="website">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #111827; background: #f9fafb; }
+  .container { max-width: 1280px; margin: 0 auto; padding: 0 1rem; }
+  
+  /* Header */
+  header { border-bottom: 1px solid #e5e7eb; background: white; }
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem; max-width: 1280px; margin: 0 auto; }
+  .logo { font-size: 1.25rem; font-weight: 700; color: #1d4ed8; text-decoration: none; }
+  .nav-links { display: flex; gap: 1.5rem; }
+  .nav-links a { color: #4b5563; text-decoration: none; font-size: 0.875rem; font-weight: 500; }
+  .nav-links a:hover { color: #1d4ed8; }
+  
+  /* Hero */
+  .hero { background: linear-gradient(135deg, #1d4ed8, #1e3a8a); color: white; padding: 4rem 1rem; }
+  .hero h1 { font-size: 2.5rem; line-height: 1.1; font-weight: 700; }
+  .hero p { font-size: 1.125rem; margin-top: 1rem; color: #bfdbfe; max-width: 700px; }
+  .hero-btns { margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; text-decoration: none; font-size: 0.95rem; }
+  .btn-primary { background: white; color: #1d4ed8; }
+  .btn-primary:hover { background: #eff6ff; }
+  .btn-outline { border: 2px solid white; color: white; }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); }
+  
+  /* Sections */
+  section { padding: 3rem 0; }
+  section h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; }
+  
+  /* Grid */
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+  .grid-5 { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
+  
+  /* Cards */
+  .card { border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1.25rem; background: white; transition: all 0.2s; text-decoration: none; color: inherit; display: block; }
+  .card:hover { border-color: #93c5fd; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+  .card h3 { font-weight: 600; font-size: 1rem; }
+  .card h3:hover { color: #1d4ed8; }
+  .card .emoji { font-size: 2rem; margin-bottom: 0.5rem; }
+  .card .pop { font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; }
+  
+  /* Search results card */
+  .biz-card { border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1.25rem; background: white; margin-bottom: 1rem; }
+  .biz-card.sponsored { border-color: #1d4ed8; border-width: 2px; position: relative; }
+  .biz-sponsored-tag { position: absolute; top: -0.75rem; left: 1rem; background: #1d4ed8; color: white; font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .biz-name { font-size: 1.125rem; font-weight: 700; color: #1d4ed8; }
+  .biz-meta { display: flex; align-items: center; gap: 1rem; margin: 0.5rem 0; font-size: 0.875rem; color: #6b7280; }
+  .biz-stars { color: #f59e0b; }
+  .biz-desc { font-size: 0.9rem; color: #374151; margin-top: 0.5rem; line-height: 1.5; }
+  .biz-services { margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .biz-service-tag { background: #eff6ff; color: #1d4ed8; font-size: 0.75rem; font-weight: 500; padding: 0.2rem 0.5rem; border-radius: 0.25rem; }
+  .biz-actions { margin-top: 0.75rem; display: flex; gap: 1rem; }
+  .biz-action { font-size: 0.875rem; color: #1d4ed8; text-decoration: none; font-weight: 600; }
+  .biz-action:hover { text-decoration: underline; }
+  
+  /* Search bar */
+  .search-section { background: #eff6ff; padding: 2rem 0; }
+  .search-box { display: flex; gap: 0.5rem; max-width: 600px; }
+  .search-input { flex: 1; padding: 0.75rem 1rem; border: 2px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem; }
+  .search-input:focus { outline: none; border-color: #1d4ed8; }
+  .search-btn { background: #1d4ed8; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; }
+  
+  /* Trust */
+  .trust-section { background: #eff6ff; }
+  .trust-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+  .trust-item .icon { font-size: 2.5rem; }
+  .trust-item h3 { font-weight: 600; margin-top: 0.5rem; }
+  .trust-item p { font-size: 0.875rem; color: #4b5563; margin-top: 0.5rem; line-height: 1.5; }
+  
+  /* Footer */
+  footer { background: #111827; color: #9ca3af; padding: 3rem 0; }
+  .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; }
+  .footer-grid h3, .footer-grid h4 { color: white; }
+  .footer-grid ul { list-style: none; margin-top: 0.5rem; }
+  .footer-grid li { margin-top: 0.25rem; }
+  .footer-grid a { color: #9ca3af; text-decoration: none; font-size: 0.875rem; }
+  .footer-grid a:hover { color: white; }
+  .footer-bottom { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #374151; text-align: center; font-size: 0.875rem; }
+  
+  /* Breadcrumb */
+  .breadcrumb { font-size: 0.875rem; color: #bfdbfe; margin-bottom: 0.5rem; }
+  .breadcrumb a { color: #bfdbfe; text-decoration: none; }
+  .breadcrumb a:hover { color: white; }
+  
+  /* FAQ */
+  .faq-item { border-bottom: 1px solid #e5e7eb; padding: 1rem 0; }
+  .faq-q { font-weight: 600; font-size: 1rem; }
+  .faq-a { font-size: 0.9rem; color: #4b5563; margin-top: 0.5rem; line-height: 1.6; }
+  
+  /* Internal links */
+  .internal-links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem; }
+  .internal-link { background: #eff6ff; color: #1d4ed8; padding: 0.4rem 0.8rem; border-radius: 0.375rem; font-size: 0.8rem; text-decoration: none; font-weight: 500; }
+  .internal-link:hover { background: #dbeafe; }
+  
+  /* Tabs for demo navigation */
+  .demo-tabs { display: flex; gap: 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 0; }
+  .demo-tab { padding: 0.75rem 1.5rem; background: #f3f4f6; border: none; cursor: pointer; font-weight: 500; font-size: 0.875rem; border-radius: 0.5rem 0.5rem 0 0; }
+  .demo-tab.active { background: white; border: 2px solid #e5e7eb; border-bottom: 2px solid white; margin-bottom: -2px; color: #1d4ed8; }
+  .demo-page { display: none; }
+  .demo-page.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Demo page tabs -->
+<div style="background:#fef3c7; padding:0.75rem 1rem; text-align:center; font-size:0.875rem; color:#92400e;">
+  📋 <strong>Demo Preview</strong> — Click the tabs below to see different page types. This is what jocohomepros.com will look like.
+</div>
+
+<div class="demo-tabs container">
+  <button class="demo-tab active" onclick="showPage('home')">🏠 Homepage</button>
+  <button class="demo-tab" onclick="showPage('category')">🔧 HVAC Category</button>
+  <button class="demo-tab" onclick="showPage('catcity')">📍 HVAC in Overland Park</button>
+  <button class="demo-tab" onclick="showPage('biz')">🏪 Business Detail</button>
+</div>
+
+<!-- ==================== HOMEPAGE ==================== -->
+<div id="page-home" class="demo-page active">
+<header>
+  <nav class="nav container">
+    <a href="#" class="logo">🏠 JoCo Home Pros</a>
+    <div class="nav-links">
+      <a href="#">HVAC</a>
+      <a href="#">Plumbing</a>
+      <a href="#">Roofing</a>
+      <a href="#">Landscaping</a>
+      <a href="#">Electrician</a>
+      <a href="#">All Services →</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h1>Find Trusted Home Pros in Johnson County</h1>
+    <p>Compare the best HVAC, plumbing, roofing, landscaping, and home service professionals in Overland Park, Olathe, Lenexa, and across JoCo.</p>
+    <div class="hero-btns">
+      <a href="#" class="btn btn-primary">Browse All Services</a>
+      <a href="#" class="btn btn-outline">Browse by City</a>
+    </div>
+  </div>
+</section>
+
+<section class="search-section">
+  <div class="container">
+    <div class="search-box">
+      <input class="search-input" type="text" placeholder="What service do you need? (e.g., plumber, HVAC, roofer...)">
+      <input class="search-input" type="text" placeholder="City (e.g., Overland Park)" style="max-width:200px;">
+      <button class="search-btn">Search</button>
+    </div>
+  </div>
+</section>
+
+<section class="container">
+  <h2>Browse by Service</h2>
+  <div class="grid-5">
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">🌡️</div>
+      <h3>HVAC & Heating</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">🔧</div>
+      <h3>Plumbing</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">🏠</div>
+      <h3>Roofing</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">🌿</div>
+      <h3>Landscaping</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">⚡</div>
+      <h3>Electrician</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">🎨</div>
+      <h3>Painting</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">🚪</div>
+      <h3>Garage Door</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">🌲</div>
+      <h3>Tree Service</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">🪟</div>
+      <h3>Windows</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">🐛</div>
+      <h3>Pest Control</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">🚗</div>
+      <h3>Auto Repair</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">😁</div>
+      <h3>Dentist</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">📦</div>
+      <h3>Movers</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">✨</div>
+      <h3>Cleaning</h3>
+    </a>
+    <a href="#" class="card" style="text-align:center;">
+      <div class="emoji">🏊</div>
+      <h3>Pool Service</h3>
+    </a>
+  </div>
+</section>
+
+<section style="background:#f3f4f6;">
+  <div class="container">
+    <h2>Browse by City</h2>
+    <p style="color:#6b7280; margin-bottom:1rem;">Serving all 9 cities in Johnson County, KS (population: 572,733)</p>
+    <div class="grid-3">
+      <a href="#" class="card"><h3>Overland Park</h3><p class="pop">Pop. 202,893</p></a>
+      <a href="#" class="card"><h3>Olathe</h3><p class="pop">Pop. 145,057</p></a>
+      <a href="#" class="card"><h3>Lenexa</h3><p class="pop">Pop. 59,427</p></a>
+      <a href="#" class="card"><h3>Leawood</h3><p class="pop">Pop. 34,659</p></a>
+      <a href="#" class="card"><h3>Shawnee</h3><p class="pop">Pop. 67,311</p></a>
+      <a href="#" class="card"><h3>Gardner</h3><p class="pop">Pop. 23,878</p></a>
+      <a href="#" class="card"><h3>Prairie Village</h3><p class="pop">Pop. 23,229</p></a>
+      <a href="#" class="card"><h3>Merriam</h3><p class="pop">Pop. 10,995</p></a>
+      <a href="#" class="card"><h3>De Soto</h3><p class="pop">Pop. 6,118</p></a>
+    </div>
+  </div>
+</section>
+
+<section class="container">
+  <h2>Popular Searches in Johnson County</h2>
+  <div class="grid-3">
+    <a href="#" class="card" style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:500;">Best HVAC in Overland Park</span><span style="color:#9ca3af;">→</span>
+    </a>
+    <a href="#" class="card" style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:500;">Best Plumber in Olathe</span><span style="color:#9ca3af;">→</span>
+    </a>
+    <a href="#" class="card" style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:500;">Best Roofer in Lenexa</span><span style="color:#9ca3af;">→</span>
+    </a>
+    <a href="#" class="card" style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:500;">Best Landscaper in Leawood</span><span style="color:#9ca3af;">→</span>
+    </a>
+    <a href="#" class="card" style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:500;">Best Electrician in Shawnee</span><span style="color:#9ca3af;">→</span>
+    </a>
+    <a href="#" class="card" style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-weight:500;">HVAC Repair in Overland Park</span><span style="color:#9ca3af;">→</span>
+    </a>
+  </div>
+</section>
+
+<section class="trust-section">
+  <div class="container">
+    <h2>Why JoCo Home Pros?</h2>
+    <div class="trust-grid">
+      <div class="trust-item">
+        <div class="icon">✓</div>
+        <h3>Verified Local Businesses</h3>
+        <p>Every listing is a real business serving Johnson County. No national call centers — just local pros who know your neighborhood.</p>
+      </div>
+      <div class="trust-item">
+        <div class="icon">⭐</div>
+        <h3>Ratings & Reviews</h3>
+        <p>See what your neighbors say. We aggregate ratings from multiple sources so you can make informed decisions.</p>
+      </div>
+      <div class="trust-item">
+        <div class="icon">📍</div>
+        <h3>Built for Johnson County</h3>
+        <p>We focus exclusively on Johnson County, Kansas — from Overland Park to De Soto. No irrelevant results.</p>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- ==================== CATEGORY PAGE ==================== -->
+<div id="page-category" class="demo-page">
+<header>
+  <nav class="nav container">
+    <a href="#" class="logo">🏠 JoCo Home Pros</a>
+    <div class="nav-links">
+      <a href="#">HVAC</a>
+      <a href="#">Plumbing</a>
+      <a href="#">Roofing</a>
+      <a href="#">Landscaping</a>
+      <a href="#">Electrician</a>
+      <a href="#">All Services →</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div class="breadcrumb"><a href="#">Home</a> › <span>HVAC & Heating Cooling</span></div>
+    <h1>Best HVAC & Heating Cooling in Johnson County, KS</h1>
+    <p>Top-rated HVAC contractors in Johnson County, KS. Expert heating, cooling, and air conditioning repair, installation, and maintenance for Overland Park, Olathe, Lenexa, and surrounding areas.</p>
+  </div>
+</section>
+
+<section class="container">
+  <h2>Browse HVAC by City</h2>
+  <div class="grid-3">
+    <a href="#" class="card"><h3>HVAC in Overland Park</h3><p class="pop">Pop. 202,893</p></a>
+    <a href="#" class="card"><h3>HVAC in Olathe</h3><p class="pop">Pop. 145,057</p></a>
+    <a href="#" class="card"><h3>HVAC in Lenexa</h3><p class="pop">Pop. 59,427</p></a>
+    <a href="#" class="card"><h3>HVAC in Leawood</h3><p class="pop">Pop. 34,659</p></a>
+    <a href="#" class="card"><h3>HVAC in Shawnee</h3><p class="pop">Pop. 67,311</p></a>
+    <a href="#" class="card"><h3>HVAC in Gardner</h3><p class="pop">Pop. 23,878</p></a>
+    <a href="#" class="card"><h3>HVAC in Prairie Village</h3><p class="pop">Pop. 23,229</p></a>
+    <a href="#" class="card"><h3>HVAC in Merriam</h3><p class="pop">Pop. 10,995</p></a>
+    <a href="#" class="card"><h3>HVAC in De Soto</h3><p class="pop">Pop. 6,118</p></a>
+  </div>
+</section>
+
+<section class="container">
+  <h2>Frequently Asked Questions</h2>
+  <div class="faq-item">
+    <div class="faq-q">How much does HVAC repair cost in Johnson County?</div>
+    <div class="faq-a">Average HVAC repair costs in Johnson County range from $150-$600, with a typical service call around $300. New system installation runs $3,500-$12,000 depending on size and efficiency. Many JoCo HVAC companies offer free estimates and seasonal maintenance plans starting at $99/year.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">How do I choose an HVAC company in Overland Park?</div>
+    <div class="faq-a">Look for licensed and insured contractors with at least 4.5 stars on Google, NATE certification, and experience with your specific system type. Get at least 3 quotes for installation. The best HVAC companies in Overland Park offer 24/7 emergency service and warranties of 5+ years on parts.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">What HVAC services are most needed in Johnson County?</div>
+    <div class="faq-a">The most requested HVAC services in Johnson County are: emergency AC repair (summer), furnace repair (winter), system replacement, seasonal maintenance/tune-ups, and indoor air quality solutions. Kansas's extreme temperature swings make reliable HVAC critical.</div>
+  </div>
+</section>
+</div>
+
+<!-- ==================== CATEGORY+CITY PAGE ==================== -->
+<div id="page-catcity" class="demo-page">
+<header>
+  <nav class="nav container">
+    <a href="#" class="logo">🏠 JoCo Home Pros</a>
+    <div class="nav-links">
+      <a href="#">HVAC</a>
+      <a href="#">Plumbing</a>
+      <a href="#">Roofing</a>
+      <a href="#">Landscaping</a>
+      <a href="#">Electrician</a>
+      <a href="#">All Services →</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div class="breadcrumb"><a href="#">Home</a> › <a href="#">HVAC & Heating Cooling</a> › <span>Overland Park</span></div>
+    <h1>Best HVAC & Heating Cooling in Overland Park, KS</h1>
+    <p>Compare trusted HVAC contractors serving Overland Park, Kansas. Ratings, reviews, and contact info for local professionals.</p>
+  </div>
+</section>
+
+<section class="container">
+  <h2>Top HVAC Companies in Overland Park</h2>
+
+  <div class="biz-card sponsored">
+    <div class="biz-sponsored-tag">Sponsored</div>
+    <div class="biz-name">Top-notch Heating & Cooling</div>
+    <div class="biz-meta">
+      <span class="biz-stars">★★★★★</span> <span>4.9 (287 reviews)</span>
+      <span>•</span>
+      <span>📍 Overland Park, KS</span>
+      <span>•</span>
+      <span>🕐 Open Now</span>
+    </div>
+    <div class="biz-desc">Family-owned HVAC company serving Overland Park since 2005. Specializing in residential AC repair, furnace installation, and indoor air quality solutions. 24/7 emergency service available. NATE-certified technicians with a 5-year parts and labor warranty.</div>
+    <div class="biz-services">
+      <span class="biz-service-tag">AC Repair</span>
+      <span class="biz-service-tag">Furnace Installation</span>
+      <span class="biz-service-tag">Maintenance Plans</span>
+      <span class="biz-service-tag">Indoor Air Quality</span>
+      <span class="biz-service-tag">24/7 Emergency</span>
+    </div>
+    <div class="biz-actions">
+      <a href="#" class="biz-action">📞 (913) 555-0142</a>
+      <a href="#" class="biz-action">🌐 Visit Website</a>
+      <a href="#" class="biz-action">📋 Get Free Quote</a>
+    </div>
+  </div>
+
+  <div class="biz-card">
+    <div class="biz-name">Overland Park Heating & Air</div>
+    <div class="biz-meta">
+      <span class="biz-stars">★★★★★</span> <span>4.8 (195 reviews)</span>
+      <span>•</span>
+      <span>📍 Overland Park, KS</span>
+      <span>•</span>
+      <span>🕐 Open Now</span>
+    </div>
+    <div class="biz-desc">Trusted HVAC contractor with 15+ years serving Johnson County. Expert in Lennox and Trane systems. Offers seasonal maintenance agreements and free second opinions on major repairs.</div>
+    <div class="biz-services">
+      <span class="biz-service-tag">AC Installation</span>
+      <span class="biz-service-tag">Heating Repair</span>
+      <span class="biz-service-tag">Maintenance Plans</span>
+      <span class="biz-service-tag">Ductwork</span>
+    </div>
+    <div class="biz-actions">
+      <a href="#" class="biz-action">📞 (913) 555-0273</a>
+      <a href="#" class="biz-action">🌐 Visit Website</a>
+    </div>
+  </div>
+
+  <div class="biz-card">
+    <div class="biz-name">Cool Breeze HVAC Solutions</div>
+    <div class="biz-meta">
+      <span class="biz-stars">★★★★☆</span> <span>4.7 (143 reviews)</span>
+      <span>•</span>
+      <span>📍 Lenexa, KS</span>
+      <span>•</span>
+      <span>🕐 Open Now</span>
+    </div>
+    <div class="biz-desc">Full-service HVAC company serving all of Johnson County. Competitive pricing on new system installations with financing available. Specializes in energy-efficient upgrades and smart thermostat integration.</div>
+    <div class="biz-services">
+      <span class="biz-service-tag">AC Installation</span>
+      <span class="biz-service-tag">Smart Thermostats</span>
+      <span class="biz-service-tag">Energy Audits</span>
+      <span class="biz-service-tag">Financing Available</span>
+    </div>
+    <div class="biz-actions">
+      <a href="#" class="biz-action">📞 (913) 555-0189</a>
+      <a href="#" class="biz-action">🌐 Visit Website</a>
+    </div>
+  </div>
+
+  <div class="biz-card">
+    <div class="biz-name">Johnson County Comfort</div>
+    <div class="biz-meta">
+      <span class="biz-stars">★★★★☆</span> <span>4.6 (98 reviews)</span>
+      <span>•</span>
+      <span>📍 Olathe, KS</span>
+      <span>•</span>
+      <span>🕐 Closes at 5 PM</span>
+    </div>
+    <div class="biz-desc">Locally owned and operated since 2010. Provides residential and light commercial HVAC services throughout Johnson County. Known for transparent pricing and same-day service calls.</div>
+    <div class="biz-services">
+      <span class="biz-service-tag">Residential HVAC</span>
+      <span class="biz-service-tag">Commercial HVAC</span>
+      <span class="biz-service-tag">Same-Day Service</span>
+    </div>
+    <div class="biz-actions">
+      <a href="#" class="biz-action">📞 (913) 555-0334</a>
+      <a href="#" class="biz-action">🌐 Visit Website</a>
+    </div>
+  </div>
+
+  <div class="biz-card">
+    <div class="biz-name">Air Masters KC</div>
+    <div class="biz-meta">
+      <span class="biz-stars">★★★★☆</span> <span>4.5 (76 reviews)</span>
+      <span>•</span>
+      <span>📍 Overland Park, KS</span>
+      <span>•</span>
+      <span>🕐 Open Now</span>
+    </div>
+    <div class="biz-desc">Specializing in Carrier and Bryant HVAC systems. Offers preventative maintenance agreements starting at $149/year. Licensed, bonded, and insured for your protection.</div>
+    <div class="biz-services">
+      <span class="biz-service-tag">Carrier Systems</span>
+      <span class="biz-service-tag">Preventative Maintenance</span>
+      <span class="biz-service-tag">Duct Cleaning</span>
+    </div>
+    <div class="biz-actions">
+      <a href="#" class="biz-action">📞 (913) 555-0415</a>
+      <a href="#" class="biz-action">🌐 Visit Website</a>
+    </div>
+  </div>
+</section>
+
+<section style="background:#f3f4f6;">
+  <div class="container">
+    <h2>Other Home Services in Overland Park</h2>
+    <div class="internal-links">
+      <a href="#" class="internal-link">Plumber in Overland Park</a>
+      <a href="#" class="internal-link">Roofer in Overland Park</a>
+      <a href="#" class="internal-link">Landscaper in Overland Park</a>
+      <a href="#" class="internal-link">Electrician in Overland Park</a>
+      <a href="#" class="internal-link">Painter in Overland Park</a>
+      <a href="#" class="internal-link">Garage Door in Overland Park</a>
+      <a href="#" class="internal-link">Tree Service in Overland Park</a>
+      <a href="#" class="internal-link">Window Company in Overland Park</a>
+      <a href="#" class="internal-link">Pest Control in Overland Park</a>
+      <a href="#" class="internal-link">Auto Repair in Overland Park</a>
+    </div>
+  </div>
+</section>
+
+<section class="container">
+  <h2>About Overland Park</h2>
+  <p style="color:#4b5563; line-height:1.6;">Overland Park is the second-largest city in Kansas and the crown jewel of Johnson County. With a population of over 200,000, it combines upscale suburban living with thriving business districts. Home to the corporate headquarters of Sprint (now T-Mobile) and numerous Fortune 500 satellite offices, Overland Park residents expect quality service from top-rated home professionals.</p>
+  
+  <h2 style="margin-top:2rem;">Frequently Asked Questions</h2>
+  <div class="faq-item">
+    <div class="faq-q">How much does HVAC repair cost in Overland Park?</div>
+    <div class="faq-a">Average HVAC repair in Overland Park costs $150-$600, with a typical service call around $300. New installation ranges from $3,500-$12,000. Many companies offer free estimates.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">Do Overland Park HVAC companies offer emergency service?</div>
+    <div class="faq-a">Yes, most top-rated HVAC companies in Overland Park offer 24/7 emergency service, especially during extreme temperature events. Expect to pay a $75-$150 emergency call fee after hours.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">What is the best time of year to replace an HVAC system?</div>
+    <div class="faq-a">The best times are spring (March-May) and fall (September-November) when demand is lower. Many Overland Park HVAC companies offer 10-15% discounts during off-season and have more flexible scheduling.</div>
+  </div>
+</section>
+</div>
+
+<!-- ==================== BUSINESS DETAIL PAGE ==================== -->
+<div id="page-biz" class="demo-page">
+<header>
+  <nav class="nav container">
+    <a href="#" class="logo">🏠 JoCo Home Pros</a>
+    <div class="nav-links">
+      <a href="#">HVAC</a>
+      <a href="#">Plumbing</a>
+      <a href="#">Roofing</a>
+      <a href="#">Landscaping</a>
+      <a href="#">Electrician</a>
+      <a href="#">All Services →</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <div class="breadcrumb"><a href="#">Home</a> › <a href="#">HVAC</a> › <a href="#">Overland Park</a> › <span>Top-notch Heating & Cooling</span></div>
+    <h1>Top-notch Heating & Cooling</h1>
+    <p style="margin-top:0.5rem;">Family-owned HVAC company serving Overland Park since 2005</p>
+  </div>
+</section>
+
+<section class="container" style="display:grid; grid-template-columns:2fr 1fr; gap:2rem; margin-top:2rem;">
+  <div>
+    <div style="background:white; border:1px solid #e5e7eb; border-radius:0.5rem; padding:1.5rem; margin-bottom:1.5rem;">
+      <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+        <span style="font-size:3rem;">🌡️</span>
+        <div>
+          <h2 style="margin-bottom:0.25rem;">Top-notch Heating & Cooling</h2>
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <span style="color:#f59e0b;">★★★★★</span>
+            <span style="font-size:0.875rem; color:#6b7280;">4.9 (287 Google reviews)</span>
+          </div>
+          <div style="font-size:0.875rem; color:#6b7280; margin-top:0.25rem;">📍 12345 Metcalf Ave, Overland Park, KS 66209</div>
+        </div>
+      </div>
+      
+      <div style="border-top:1px solid #e5e7eb; padding-top:1rem; margin-top:1rem;">
+        <h3 style="margin-bottom:0.5rem;">About</h3>
+        <p style="font-size:0.9rem; line-height:1.6; color:#374151;">Family-owned HVAC company serving Overland Park since 2005. Specializing in residential AC repair, furnace installation, and indoor air quality solutions. 24/7 emergency service available. NATE-certified technicians with a 5-year parts and labor warranty on all installations. We service all makes and models, and offer free estimates on new system installations.</p>
+      </div>
+      
+      <div style="border-top:1px solid #e5e7eb; padding-top:1rem; margin-top:1rem;">
+        <h3 style="margin-bottom:0.5rem;">Services</h3>
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+          <span class="biz-service-tag">AC Repair</span>
+          <span class="biz-service-tag">AC Installation</span>
+          <span class="biz-service-tag">Furnace Repair</span>
+          <span class="biz-service-tag">Furnace Installation</span>
+          <span class="biz-service-tag">Maintenance Plans</span>
+          <span class="biz-service-tag">Indoor Air Quality</span>
+          <span class="biz-service-tag">Smart Thermostats</span>
+          <span class="biz-service-tag">24/7 Emergency Service</span>
+          <span class="biz-service-tag">Ductwork</span>
+          <span class="biz-service-tag">Free Estimates</span>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #e5e7eb; padding-top:1rem; margin-top:1rem;">
+        <h3 style="margin-bottom:0.5rem;">Hours</h3>
+        <table style="font-size:0.875rem; color:#374151; width:100%;">
+          <tr><td style="padding:0.25rem 0; width:120px;">Monday</td><td>7:00 AM – 7:00 PM</td></tr>
+          <tr><td style="padding:0.25rem 0;">Tuesday</td><td>7:00 AM – 7:00 PM</td></tr>
+          <tr><td style="padding:0.25rem 0;">Wednesday</td><td>7:00 AM – 7:00 PM</td></tr>
+          <tr><td style="padding:0.25rem 0;">Thursday</td><td>7:00 AM – 7:00 PM</td></tr>
+          <tr><td style="padding:0.25rem 0;">Friday</td><td>7:00 AM – 7:00 PM</td></tr>
+          <tr><td style="padding:0.25rem 0;">Saturday</td><td>8:00 AM – 4:00 PM</td></tr>
+          <tr><td style="padding:0.25rem 0;">Sunday</td><td>Closed</td></tr>
+          <tr><td colspan="2" style="padding:0.25rem 0; color:#1d4ed8; font-weight:600;">24/7 Emergency service available</td></tr>
+        </table>
+      </div>
+
+      <div style="border-top:1px solid #e5e7eb; padding-top:1rem; margin-top:1rem;">
+        <h3 style="margin-bottom:0.5rem;">Service Area</h3>
+        <p style="font-size:0.875rem; color:#374151;">Overland Park, Leawood, Lenexa, Olathe, Prairie Village, Shawnee, and all of Johnson County, KS.</p>
+      </div>
+    </div>
+
+    <div style="background:white; border:1px solid #e5e7eb; border-radius:0.5rem; padding:1.5rem;">
+      <h3 style="margin-bottom:1rem;">Frequently Asked Questions</h3>
+      <div class="faq-item">
+        <div class="faq-q">Does Top-notch Heating & Cooling offer free estimates?</div>
+        <div class="faq-a">Yes, Top-notch Heating & Cooling offers free estimates on all new system installations. Repair service calls start at $89 with the fee waived if you proceed with repairs.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What brands does Top-notch Heating & Cooling service?</div>
+        <div class="faq-a">They service all makes and models. For new installations, they are an authorized dealer for Lennox, Trane, and Carrier systems.</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div style="background:white; border:2px solid #1d4ed8; border-radius:0.5rem; padding:1.5rem; margin-bottom:1.5rem;">
+      <div style="font-size:0.75rem; font-weight:700; color:white; background:#1d4ed8; display:inline-block; padding:0.15rem 0.5rem; border-radius:0.25rem; margin-bottom:1rem;">VERIFIED BUSINESS</div>
+      <h3 style="margin-bottom:1rem;">Contact Top-notch Heating & Cooling</h3>
+      <a href="#" style="display:block; width:100%; text-align:center; padding:0.75rem; background:#1d4ed8; color:white; border-radius:0.5rem; font-weight:600; text-decoration:none; margin-bottom:0.75rem;">📞 Call (913) 555-0142</a>
+      <a href="#" style="display:block; width:100%; text-align:center; padding:0.75rem; background:#eff6ff; color:#1d4ed8; border-radius:0.5rem; font-weight:600; text-decoration:none; margin-bottom:0.75rem;">🌐 Visit Website</a>
+      <a href="#" style="display:block; width:100%; text-align:center; padding:0.75rem; background:#f0fdf4; color:#166534; border-radius:0.5rem; font-weight:600; text-decoration:none;">📋 Get Free Quote</a>
+    </div>
+
+    <div style="background:white; border:1px solid #e5e7eb; border-radius:0.5rem; padding:1.5rem; margin-bottom:1.5rem;">
+      <h3 style="margin-bottom:0.75rem;">Quick Facts</h3>
+      <table style="font-size:0.875rem; width:100%;">
+        <tr><td style="padding:0.25rem 0; color:#6b7280;">Years in Business</td><td style="text-align:right; font-weight:500;">20+</td></tr>
+        <tr><td style="padding:0.25rem 0; color:#6b7280;">Licensed</td><td style="text-align:right; font-weight:500;">✓ Kansas</td></tr>
+        <tr><td style="padding:0.25rem 0; color:#6b7280;">Insured</td><td style="text-align:right; font-weight:500;">✓ Bonded</td></tr>
+        <tr><td style="padding:0.25rem 0; color:#6b7280;">NATE Certified</td><td style="text-align:right; font-weight:500;">✓</td></tr>
+        <tr><td style="padding:0.25rem 0; color:#6b7280;">BBB Rating</td><td style="text-align:right; font-weight:500;">A+</td></tr>
+        <tr><td style="padding:0.25rem 0; color:#6b7280;">Emergency Service</td><td style="text-align:right; font-weight:500;">24/7</td></tr>
+        <tr><td style="padding:0.25rem 0; color:#6b7280;">Warranty</td><td style="text-align:right; font-weight:500;">5 yr parts/labor</td></tr>
+      </table>
+    </div>
+
+    <div style="background:white; border:1px solid #e5e7eb; border-radius:0.5rem; padding:1.5rem;">
+      <h3 style="margin-bottom:0.75rem;">Also Serves</h3>
+      <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+        <span class="biz-service-tag">Overland Park</span>
+        <span class="biz-service-tag">Leawood</span>
+        <span class="biz-service-tag">Lenexa</span>
+        <span class="biz-service-tag">Olathe</span>
+        <span class="biz-service-tag">Prairie Village</span>
+        <span class="biz-service-tag">Shawnee</span>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- Footer (shared) -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <h3>JoCo Home Pros</h3>
+        <p style="margin-top:0.5rem; font-size:0.875rem;">The trusted directory for home service professionals in Johnson County, Kansas.</p>
+      </div>
+      <div>
+        <h4>Popular Services</h4>
+        <ul>
+          <li><a href="#">HVAC Repair</a></li>
+          <li><a href="#">Plumbing</a></li>
+          <li><a href="#">Roofing</a></li>
+          <li><a href="#">Landscaping</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Cities</h4>
+        <ul>
+          <li><a href="#">Overland Park</a></li>
+          <li><a href="#">Olathe</a></li>
+          <li><a href="#">Lenexa</a></li>
+          <li><a href="#">Leawood</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 JoCo Home Pros. All rights reserved.</p>
+      <p>Serving Johnson County, Kansas — Overland Park, Olathe, Lenexa, Leawood, Shawnee, Gardner, Prairie Village, Merriam, De Soto</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+function showPage(id) {
+  document.querySelectorAll('.demo-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.demo-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo(0, 0);
+}
+</script>
+
+</body>
+</html>
