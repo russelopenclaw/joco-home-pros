@@ -44,3 +44,4 @@ next-env.d.ts
 .env.local
 .env*.local
 supabase_creds.txt
+google_maps_api_key.txt

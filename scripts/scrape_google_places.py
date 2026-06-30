@@ -127,9 +127,10 @@ DELAY_BETWEEN_CALLS = 2  # seconds between API calls
 DELAY_ON_429 = 30  # seconds to wait on rate limit
 
 # Field masks for search (keep minimal to stay in Essentials tier)
-SEARCH_FIELDS = "places.id,places.displayName,places.formattedAddress,places.location,places.businessStatus,places.googleMapsUri,places.websiteUri,places.primaryType,places.primaryTypeDisplayName,places.rating,places.userRatingCount,places.nationalPhoneNumber,places.internationalPhoneNumber,places.priceLevel,places.regularOpeningHours,places.serviceArea"
+# Only request fields we actually need to minimize cost
+SEARCH_FIELDS = "places.id,places.displayName,places.formattedAddress,places.location,places.businessStatus,places.googleMapsUri,places.websiteUri,places.rating,places.userRatingCount,places.nationalPhoneNumber,places.priceLevel"
 # Field masks for details (Pro tier, used sparingly)
-DETAIL_FIELDS = "id,displayName,formattedAddress,location,businessStatus,googleMapsUri,websiteUri,primaryType,primaryTypeDisplayName,rating,userRatingCount,nationalPhoneNumber,internationalPhoneNumber,priceLevel,regularOpeningHours,serviceArea,editorialSummary,addressComponents"
+DETAIL_FIELDS = "id,displayName,formattedAddress,location,businessStatus,googleMapsUri,websiteUri,rating,userRatingCount,nationalPhoneNumber,priceLevel,regularOpeningHours,serviceArea,editorialSummary,addressComponents"
 
 
 # ─── API Functions ───────────────────────────────────────────────────────────
