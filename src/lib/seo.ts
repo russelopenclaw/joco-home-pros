@@ -17,16 +17,15 @@ export function generatePageSEO({
   ogImage?: string;
 }): Metadata {
   const url = `${SITE_URL}${path}`;
-  const fullTitle = `${title} | ${SITE_NAME}`;
-
+  // Layout template already appends " | JoCo Home Pros", so use just the page title
   return {
-    title: fullTitle,
+    title,
     description,
     alternates: {
       canonical: url,
     },
     openGraph: {
-      title: fullTitle,
+      title: `${title} | ${SITE_NAME}`,
       description,
       url,
       siteName: SITE_NAME,
@@ -38,7 +37,7 @@ export function generatePageSEO({
     },
     twitter: {
       card: "summary_large_image",
-      title: fullTitle,
+      title: `${title} | ${SITE_NAME}`,
       description,
     },
   };
