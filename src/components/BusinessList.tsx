@@ -83,7 +83,7 @@ export default function BusinessList({ businesses }: { businesses: any[] }) {
             )}
             {biz.address && <span>📍 {biz.address}</span>}
           </div>
-          {biz.description && (
+          {biz.description && biz.description.trim() && (
             <p className="mt-3 text-gray-700 leading-relaxed">
               {biz.description}
             </p>

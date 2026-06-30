@@ -219,15 +219,10 @@ def main():
         # Yelp has: yelp_id, yelp_url
         # OSM has: osm_id, osm_tags
         
-        # Build description from available data
+        # Build description — only use real editorial summaries, skip generated filler
+        description = ""
         if biz.get("editorial_summary"):
             description = biz["editorial_summary"]
-        elif biz.get("rating"):
-            source_label = "Google" if biz.get("google_place_id") else "Yelp"
-            review_text = f" with {biz.get('review_count', 0)} reviews" if biz.get("review_count") else ""
-            description = f"{biz['name']} provides {cat['name'].lower()} services in {city['name']}, Kansas. Rated {biz.get('rating', 'N/A')} stars on {source_label}{review_text}."
-        else:
-            description = f"{biz['name']} provides {cat['name'].lower()} services in {city['name']}, Kansas."
         
         # Service area note for businesses that serve multiple cities
         if biz.get("service_area_note"):
