@@ -64,9 +64,6 @@ export default async function HomePage() {
                 className="border bg-white rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition"
               >
                 <h3 className="font-semibold">{city.name}</h3>
-                {city.description && (
-                  <p className="text-sm text-gray-500 mt-1 line-clamp-2">{city.description}</p>
-                )}
               </a>
             ))}
           </div>
