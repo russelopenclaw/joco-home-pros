@@ -131,6 +131,13 @@ def main():
     
     print(f"📊 Loaded {len(businesses)} businesses from {args.input}")
     
+    # Filter out businesses without phone numbers
+    before_filter = len(businesses)
+    businesses = [b for b in businesses if b.get("phone")]
+    filtered = before_filter - len(businesses)
+    if filtered:
+        print(f"📞 Filtered out {filtered} businesses without phone numbers")
+    
     creds = load_supabase_creds()
     if not creds["service_key"]:
         print("❌ Supabase credentials not found. Put them in supabase_creds.txt")

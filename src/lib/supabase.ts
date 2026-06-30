@@ -63,6 +63,8 @@ export async function getBusinesses(categoryId: string, cityId: string) {
     .select("*")
     .eq("category_id", categoryId)
     .eq("city_id", cityId)
+    .not("phone", "is", null)
+    .neq("phone", "")
     .order("is_sponsored", { ascending: false })
     .order("rating", { ascending: false });
   if (error) throw error;

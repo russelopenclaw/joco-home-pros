@@ -489,6 +489,13 @@ def main():
     businesses = list(seen.values())
     print(f"📊 After dedup: {len(businesses)} unique businesses")
     
+    # Filter out businesses without phone numbers
+    before_phone_filter = len(businesses)
+    businesses = [b for b in businesses if b.get("phone")]
+    filtered = before_phone_filter - len(businesses)
+    if filtered:
+        print(f"📞 Filtered out {filtered} businesses without phone numbers")
+    
     # ── Save ─────────────────────────────────────────────────────────────────
     with open(args.output, "w") as f:
         json.dump(businesses, f, indent=2)
