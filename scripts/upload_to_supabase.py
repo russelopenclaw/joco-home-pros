@@ -158,23 +158,33 @@ def main():
     # Optionally replace placeholder data
     if args.replace and not args.dry_run:
         print("\n🗑️  Deleting existing placeholder businesses...")
-        # Delete all existing businesses
-        result = supabase_request("DELETE", "businesses?id=gt.0", creds=creds)
+        # Delete all existing businesses (using a range that covers all UUIDs)
+        result = supabase_request("DELETE", "businesses?created_at=lt.2099-01-01", creds=creds)
         if result is not None:
-            print("   ✅ All existing businesses deleted")
+            print(f"   ✅ All existing businesses deleted")
         
         # Delete all existing FAQs
-        result = supabase_request("DELETE", "faqs?id=gt.0", creds=creds)
+        result = supabase_request("DELETE", "faqs?created_at=lt.2099-01-01", creds=creds)
         if result is not None:
-            print("   ✅ All existing FAQs deleted")
+            print(f"   ✅ All existing FAQs deleted")
     
     # Upload businesses
     print(f"\n📤 Uploading {len(businesses)} businesses...")
     uploaded = 0
-    skipped = 0
     
     # Batch insert businesses
     business_rows = []
+    # Track used slugs to avoid duplicates
+    used_slugs = set()
+    skipped = 0
+    
+    # Build slug set from existing DB businesses (if not replacing)
+    if not args.replace and not args.dry_run:
+        existing = supabase_request("GET", "businesses?select=slug", creds=creds)
+        if existing:
+            for b in existing:
+                used_slugs.add(b["slug"])
+    
     for biz in businesses:
         cat = cat_map.get(biz["category_slug"])
         city = city_map.get(biz["city_slug"])
@@ -188,9 +198,14 @@ def main():
             skipped += 1
             continue
         
-        # Create unique slug
+        # Create unique slug (handle duplicates by appending counter)
         base_slug = slugify(biz["name"])
         biz_slug = f"{base_slug}-{biz['category_slug']}-{biz['city_slug']}"
+        slug_counter = 1
+        while biz_slug in used_slugs:
+            slug_counter += 1
+            biz_slug = f"{base_slug}-{biz['category_slug']}-{biz['city_slug']}-{slug_counter}"
+        used_slugs.add(biz_slug)
         
         # Detect data source and map fields accordingly
         # Google Places has: google_place_id, editorial_summary, hours, serves_multiple_cities
@@ -214,7 +229,8 @@ def main():
         # Build hours from available data
         hours_data = biz.get("hours", [])
         
-        business_rows.append({
+        # Map rating/review_count to the right columns based on source
+        row = {
             "name": biz["name"],
             "slug": biz_slug,
             "category_id": cat["id"],
@@ -223,15 +239,35 @@ def main():
             "address": biz.get("address", ""),
             "phone": biz.get("phone", ""),
             "website": biz.get("website", "") or biz.get("yelp_url", ""),
-            "rating": biz.get("rating"),
-            "review_count": biz.get("review_count", 0),
-            "price_range": biz.get("price", ""),
             "is_sponsored": False,
-            "google_place_id": biz.get("google_place_id", ""),
-            "yelp_id": biz.get("yelp_id", ""),
             "latitude": biz.get("latitude"),
             "longitude": biz.get("longitude"),
-        })
+            "hours": biz.get("hours", []) if isinstance(biz.get("hours"), list) else None,
+        }
+        
+        # Google Places data → google_rating/google_review_count columns
+        if biz.get("google_place_id"):
+            row["google_place_id"] = biz["google_place_id"]
+            row["google_rating"] = biz.get("rating")
+            row["google_review_count"] = biz.get("review_count", 0)
+            # Also populate the general rating/review_count for display
+            row["rating"] = biz.get("rating")
+            row["review_count"] = biz.get("review_count", 0)
+        
+        # Yelp data → yelp_rating/yelp_review_count columns
+        elif biz.get("yelp_id"):
+            row["yelp_id"] = biz["yelp_id"]
+            row["yelp_rating"] = biz.get("rating")
+            row["yelp_review_count"] = biz.get("review_count", 0)
+            row["rating"] = biz.get("rating")
+            row["review_count"] = biz.get("review_count", 0)
+        
+        else:
+            # OSM or other source — just use generic rating
+            row["rating"] = biz.get("rating")
+            row["review_count"] = biz.get("review_count", 0)
+        
+        business_rows.append(row)
     
     if args.dry_run:
         print(f"\n  [DRY RUN] Would upload {len(business_rows)} businesses")
@@ -258,28 +294,25 @@ def main():
     
     # Generate FAQs if requested
     if args.generate_faqs and not args.dry_run:
-        print(f"\n📝 Generating FAQs for {uploaded} businesses...")
-        # Reload businesses from Supabase to get IDs
-        all_biz = supabase_request("GET", "businesses?select=id,name,slug,category_id,city_id", creds=creds)
-        all_cats = supabase_request("GET", "categories?select=id,name,slug", creds=creds)
-        all_cities = supabase_request("GET", "cities?select=id,name,slug", creds=creds)
-        
-        cat_name_map = {c["id"]: c["name"] for c in all_cats}
-        city_name_map = {c["id"]: c["name"] for c in all_cities}
-        
+        print(f"\n📝 Generating FAQs per category/city...")
+        # FAQs are per category+city, not per business
         faq_rows = []
-        for biz in (all_biz or []):
-            cat_name = cat_name_map.get(biz["category_id"], "")
-            city_name = city_name_map.get(biz["city_id"], "")
-            faqs = generate_faqs(biz["name"], cat_name, city_name)
-            
-            for i, faq in enumerate(faqs):
-                faq_rows.append({
-                    "business_id": biz["id"],
-                    "question": faq["q"],
-                    "answer": faq["a"],
-                    "sort_order": i + 1,
-                })
+        for cat_slug, cat in cat_map.items():
+            for city_slug, city in city_map.items():
+                # Count businesses in this category+city
+                biz_count = sum(1 for b in business_rows 
+                               if b["category_id"] == cat["id"] and b["city_id"] == city["id"])
+                if biz_count == 0:
+                    continue
+                
+                faqs = generate_faqs(cat["name"], cat["name"], city["name"])
+                for i, faq in enumerate(faqs):
+                    faq_rows.append({
+                        "category_id": cat["id"],
+                        "city_id": city["id"],
+                        "question": faq["q"],
+                        "answer": faq["a"],
+                    })
         
         # Batch insert FAQs
         faq_batch_size = 100
@@ -290,7 +323,7 @@ def main():
             if result:
                 faq_uploaded += len(result)
         
-        print(f"   ✅ Generated {faq_uploaded} FAQs")
+        print(f"   ✅ Generated {faq_uploaded} FAQs across {len(cat_map)} categories × {len(city_map)} cities")
 
 
 if __name__ == "__main__":
