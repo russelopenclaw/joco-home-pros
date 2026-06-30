@@ -52,6 +52,7 @@ export default function RootLayout({
               <a href="/roofing" className="hover:text-blue-700">Roofing</a>
               <a href="/landscaping" className="hover:text-blue-700">Landscaping</a>
               <a href="/electrician" className="hover:text-blue-700">Electrician</a>
+              <a href="/handyman" className="hover:text-blue-700">Handyman</a>
               <a href="/categories" className="hover:text-blue-700">All Services →</a>
             </div>
             <button className="md:hidden text-gray-600" aria-label="Menu">

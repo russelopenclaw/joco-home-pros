@@ -25,4 +25,5 @@ export const categoryEmojis: Record<string, string> = {
   movers: "🚚",
   cleaning: "🧽",
   pool: "🏊",
+  handyman: "🔨",
 };
