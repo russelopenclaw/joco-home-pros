@@ -1,6 +1,6 @@
 import { getCategories, getCities } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
-import { categoryEmojis } from "@/lib/emojis";
+import { getCategoryIcon } from "@/lib/emojis";
 import type { Metadata } from "next";
 
 export const metadata = generatePageSEO({
@@ -76,7 +76,7 @@ export default async function HomePage() {
               className="border rounded-lg p-4 text-center hover:border-blue-400 hover:shadow-md transition"
             >
               <div className="text-3xl mb-2">
-                {categoryEmojis[cat.slug] || "🔧"}
+                {getCategoryIcon(cat.slug)}
               </div>
               <h3 className="font-semibold text-sm">{cat.name}</h3>
             </a>

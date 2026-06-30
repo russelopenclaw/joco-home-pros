@@ -94,6 +94,9 @@ export default function RootLayout({
               <p className="mt-1">
                 Serving Johnson County, Kansas — Overland Park, Olathe, Lenexa, Leawood, Shawnee, Gardner, Prairie Village, Merriam, De Soto
               </p>
+              <p className="mt-2 text-xs text-gray-500">
+                Garage door icon by emil robinson, paint icon by emil robinson — Noun Project (CC BY 3.0)
+              </p>
             </div>
           </div>
         </footer>

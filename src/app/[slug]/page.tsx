@@ -1,6 +1,6 @@
 import { getCategoryBySlug, getCityBySlug, getCategories, getCities } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
-import { categoryEmojis } from "@/lib/emojis";
+import { getCategoryIcon } from "@/lib/emojis";
 import type { Metadata } from "next";
 
 export const revalidate = 3600;
@@ -75,7 +75,7 @@ export default async function SlugPage({ params }: { params: Params }) {
             {categories.filter((c: any) => c.slug !== cat.slug).map((c: any) => (
               <a key={c.slug} href={`/${c.slug}`}
                 className="bg-blue-50 text-blue-700 px-3 py-1 rounded text-sm font-medium hover:bg-blue-100 transition">
-                {categoryEmojis[c.slug] || "🔧"} {c.name}
+                {getCategoryIcon(c.slug)} {c.name}
               </a>
             ))}
           </div>
@@ -106,7 +106,7 @@ export default async function SlugPage({ params }: { params: Params }) {
             {categories.map((c: any) => (
               <a key={c.slug} href={`/${c.slug}/${city.slug}`}
                 className="border rounded-lg p-4 text-center hover:border-blue-400 hover:shadow-md transition">
-                <div className="text-3xl mb-2">{categoryEmojis[c.slug] || "🔧"}</div>
+                <div className="text-3xl mb-2">{getCategoryIcon(c.slug)}</div>
                 <h3 className="font-semibold text-sm">{c.name}</h3>
               </a>
             ))}
