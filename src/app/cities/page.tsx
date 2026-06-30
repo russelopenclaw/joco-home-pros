@@ -3,7 +3,7 @@ import { generatePageSEO } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const metadata = generatePageSEO({
-  title: "Cities in Johnson County, KS — JoCo Home Pros",
+  title: "Cities in Johnson County, KS",
   description: "Find home service professionals in Overland Park, Olathe, Lenexa, Leawood, Shawnee, Gardner, Prairie Village, Merriam, and De Soto.",
   path: "/cities",
 });

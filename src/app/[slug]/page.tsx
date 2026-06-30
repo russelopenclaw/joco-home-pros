@@ -21,14 +21,14 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
   if (cat) {
     return generatePageSEO({
-      title: `Best ${cat.name} in Johnson County, KS — JoCo Home Pros`,
+      title: `Best ${cat.name} in Johnson County, KS`,
       description: cat.description,
       path: `/${cat.slug}`,
     });
   }
   if (city) {
     return generatePageSEO({
-      title: `Home Services in ${city.name}, KS — JoCo Home Pros`,
+      title: `Home Services in ${city.name}, KS`,
       description: `Find trusted home service professionals in ${city.name}, Kansas. HVAC, plumbing, roofing, landscaping, and more.`,
       path: `/${city.slug}`,
     });

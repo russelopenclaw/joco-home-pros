@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const cat = await getCategoryBySlug(categorySlug);
   const city = await getCityBySlug(citySlug);
   return generatePageSEO({
-    title: `Best ${cat.name} in ${city.name}, KS — JoCo Home Pros`,
+    title: `Best ${cat.name} in ${city.name}, KS`,
     description: `Compare trusted ${cat.name.toLowerCase()} serving ${city.name}, Kansas. Ratings, reviews, and contact info for local professionals.`,
     path: `/${cat.slug}/${city.slug}`,
   });

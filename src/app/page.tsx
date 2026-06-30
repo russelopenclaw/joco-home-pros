@@ -3,7 +3,7 @@ import { generatePageSEO } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const metadata = generatePageSEO({
-  title: "JoCo Home Pros — Find Trusted Home Services in Johnson County, KS",
+  title: "Find Trusted Home Services in Johnson County, KS",
   description:
     "Compare the best HVAC, plumbing, roofing, landscaping, and home service professionals in Overland Park, Olathe, Lenexa, Leawood, and across Johnson County, Kansas.",
   path: "",

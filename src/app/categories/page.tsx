@@ -3,7 +3,7 @@ import { generatePageSEO } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const metadata = generatePageSEO({
-  title: "All Home Services in Johnson County, KS — JoCo Home Pros",
+  title: "All Home Services in Johnson County, KS",
   description: "Browse all home service categories in Johnson County, KS. HVAC, plumbing, roofing, landscaping, electrical, and more.",
   path: "/categories",
 });
