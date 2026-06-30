@@ -1,5 +1,6 @@
 import { getCategoryBySlug, getCityBySlug, getCategories, getCities } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
+import { categoryIcons } from "@/components/CategoryIcons";
 import type { Metadata } from "next";
 
 export const revalidate = 3600;
@@ -42,11 +43,11 @@ export default async function SlugPage({ params }: { params: Params }) {
   const city = await getCityBySlug(slug).catch(() => null);
   const [categories, cities] = await Promise.all([getCategories(), getCities()]);
 
-  const categoryEmojis: Record<string, string> = {
-    hvac: "🌡️", plumbing: "🔧", roofing: "🏠", landscaping: "🌿",
-    electrician: "⚡", painting: "🎨", "garage-door": "🚪", "tree-service": "🌲",
-    windows: "🪟", "pest-control": "🐛", "auto-repair": "🚗", dentist: "😁",
-    movers: "📦", cleaning: "✨", pool: "🏊",
+  const categoryColors: Record<string, string> = {
+    hvac: "#dc2626", plumbing: "#2563eb", roofing: "#7c3aed", landscaping: "#16a34a",
+    electrician: "#eab308", painting: "#ec4899", "garage-door": "#64748b", "tree-service": "#15803d",
+    windows: "#0ea5e9", "pest-control": "#b45309", "auto-repair": "#475569", dentist: "#0891b2",
+    movers: "#7c3aed", cleaning: "#06b6d4", pool: "#0284c7",
   };
 
   if (cat) {
@@ -68,10 +69,9 @@ export default async function SlugPage({ params }: { params: Params }) {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {cities.map((c: any) => (
               <a key={c.slug} href={`/${cat.slug}/${c.slug}`}
-                className="border rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition">
-                <h3 className="font-semibold">{cat.name} in {c.name}</h3>
-                <p className="text-sm text-gray-500">Pop. {c.population.toLocaleString()}</p>
-              </a>
+                >
+                  <h3 className="font-semibold">{cat.name} in {c.name}</h3>
+                </a>
             ))}
           </div>
         </section>
@@ -81,8 +81,8 @@ export default async function SlugPage({ params }: { params: Params }) {
           <div className="flex flex-wrap gap-2">
             {categories.filter((c: any) => c.slug !== cat.slug).map((c: any) => (
               <a key={c.slug} href={`/${c.slug}`}
-                className="bg-blue-50 text-blue-700 px-3 py-1 rounded text-sm font-medium hover:bg-blue-100 transition">
-                {categoryEmojis[c.slug] || "🔧"} {c.name}
+                className="bg-blue-50 text-blue-700 px-3 py-1 rounded text-sm font-medium hover:bg-blue-100 transition inline-flex items-center gap-1">
+                <span style={{ color: categoryColors[c.slug] || "#2563eb", display: "inline-flex", width: "18px", height: "18px" }}>{categoryIcons[c.slug]?.svg}</span> {c.name}
               </a>
             ))}
           </div>
@@ -113,7 +113,9 @@ export default async function SlugPage({ params }: { params: Params }) {
             {categories.map((c: any) => (
               <a key={c.slug} href={`/${c.slug}/${city.slug}`}
                 className="border rounded-lg p-4 text-center hover:border-blue-400 hover:shadow-md transition">
-                <div className="text-3xl mb-2">{categoryEmojis[c.slug] || "🔧"}</div>
+                <div className="flex justify-center mb-2" style={{ color: categoryColors[c.slug] || "#2563eb" }}>
+                  {categoryIcons[c.slug]?.svg || <span className="text-3xl">🔧</span>}
+                </div>
                 <h3 className="font-semibold text-sm">{c.name}</h3>
               </a>
             ))}

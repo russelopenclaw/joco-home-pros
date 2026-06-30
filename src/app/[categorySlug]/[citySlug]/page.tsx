@@ -175,7 +175,6 @@ export default async function CategoryCityPage({ params }: { params: Params }) {
             <a key={c.slug} href={`/${cat.slug}/${c.slug}`}
               className="border rounded-lg p-3 hover:border-blue-400 transition">
               <span className="font-medium">{cat.name.split(" ")[0]} in {c.name}</span>
-              <span className="text-gray-500 text-sm ml-1">({c.population.toLocaleString()})</span>
             </a>
           ))}
         </div>
