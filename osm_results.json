@@ -1,0 +1,81 @@
+[
+  {
+    "osm_id": "264630121",
+    "name": "Prairie Center Plumbing, Heating and AC",
+    "category_slug": "hvac",
+    "city_slug": "olathe",
+    "address": "North Marion Street",
+    "city": "Olathe",
+    "state": "Kansas",
+    "zip_code": "66061",
+    "phone": "",
+    "website": "",
+    "latitude": "38.8851328",
+    "longitude": "-94.8318474",
+    "osm_tags": {
+      "phone": "+1-913-829-6263",
+      "height": "5.334",
+      "website": "https://www.prairiecenterplumbingheating.com/",
+      "building": "yes",
+      "building:levels": "1"
+    }
+  },
+  {
+    "osm_id": "4067246872",
+    "name": "MVP Electric, Heating & Cooling",
+    "category_slug": "hvac",
+    "city_slug": "lenexa",
+    "address": "College Boulevard",
+    "city": "Lenexa",
+    "state": "Kansas",
+    "zip_code": "66219",
+    "phone": "",
+    "website": "",
+    "latitude": "38.9278704",
+    "longitude": "-94.7666634",
+    "osm_tags": {
+      "phone": "+1-913-322-0868",
+      "website": "https://www.mvpelectric.com/"
+    }
+  },
+  {
+    "osm_id": "951477675",
+    "name": "Top Notch Heating, Cooling & Plumbing",
+    "category_slug": "hvac",
+    "city_slug": "shawnee",
+    "address": "West 82nd Terrace",
+    "city": "Shawnee",
+    "state": "Kansas",
+    "zip_code": "66227",
+    "phone": "",
+    "website": "",
+    "latitude": "38.9795267",
+    "longitude": "-94.8606502",
+    "osm_tags": {
+      "phone": "+1-913-441-8900",
+      "height": "4.05384",
+      "website": "https://www.topnotchheatingandair.com/",
+      "building": "yes",
+      "building:levels": "1"
+    }
+  },
+  {
+    "osm_id": "695551985",
+    "name": "Harrington Brothers Heating and Cooling",
+    "category_slug": "hvac",
+    "city_slug": "shawnee",
+    "address": "Cole Parkway",
+    "city": "Shawnee",
+    "state": "Kansas",
+    "zip_code": "66227",
+    "phone": "",
+    "website": "",
+    "latitude": "38.9810126",
+    "longitude": "-94.8590752",
+    "osm_tags": {
+      "phone": "+1 913 971 0157",
+      "website": "https://www.shawneehvacservice.com/",
+      "building": "yes"
+    }
+  }
+]

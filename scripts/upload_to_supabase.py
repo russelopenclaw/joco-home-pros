@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-Upload scraped Yelp business data to Supabase.
+Upload scraped business data to Supabase.
 Handles deduplication, slug generation, and FAQ generation.
+Works with data from scrape_google_places.py, scrape_yelp.py, or scrape_osm.py.
 
 Usage:
-  python3 upload_to_supabase.py --input yelp_results.json [--dry-run] [--generate-faqs]
+  python3 upload_to_supabase.py --input google_places_results.json [--dry-run] [--generate-faqs] [--replace]
+  python3 upload_to_supabase.py --input osm_results.json --source osm [--dry-run]
 
 Prerequisites:
   - Supabase credentials in supabase_creds.txt
-  - Yelp results from scrape_yelp.py
 """
 
 import argparse
@@ -191,19 +192,42 @@ def main():
         base_slug = slugify(biz["name"])
         biz_slug = f"{base_slug}-{biz['category_slug']}-{biz['city_slug']}"
         
+        # Detect data source and map fields accordingly
+        # Google Places has: google_place_id, editorial_summary, hours, serves_multiple_cities
+        # Yelp has: yelp_id, yelp_url
+        # OSM has: osm_id, osm_tags
+        
+        # Build description from available data
+        if biz.get("editorial_summary"):
+            description = biz["editorial_summary"]
+        elif biz.get("rating"):
+            source_label = "Google" if biz.get("google_place_id") else "Yelp"
+            review_text = f" with {biz.get('review_count', 0)} reviews" if biz.get("review_count") else ""
+            description = f"{biz['name']} provides {cat['name'].lower()} services in {city['name']}, Kansas. Rated {biz.get('rating', 'N/A')} stars on {source_label}{review_text}."
+        else:
+            description = f"{biz['name']} provides {cat['name'].lower()} services in {city['name']}, Kansas."
+        
+        # Service area note for businesses that serve multiple cities
+        if biz.get("service_area_note"):
+            description += f" {biz['service_area_note']}."
+        
+        # Build hours from available data
+        hours_data = biz.get("hours", [])
+        
         business_rows.append({
             "name": biz["name"],
             "slug": biz_slug,
             "category_id": cat["id"],
             "city_id": city["id"],
-            "description": f"{biz['name']} provides {cat['name'].lower()} services in {city['name']}, Kansas. Rated {biz.get('rating', 'N/A')} stars on Yelp with {biz.get('review_count', 0)} reviews.",
+            "description": description,
             "address": biz.get("address", ""),
             "phone": biz.get("phone", ""),
-            "website": biz.get("yelp_url", ""),
+            "website": biz.get("website", "") or biz.get("yelp_url", ""),
             "rating": biz.get("rating"),
             "review_count": biz.get("review_count", 0),
             "price_range": biz.get("price", ""),
             "is_sponsored": False,
+            "google_place_id": biz.get("google_place_id", ""),
             "yelp_id": biz.get("yelp_id", ""),
             "latitude": biz.get("latitude"),
             "longitude": biz.get("longitude"),
