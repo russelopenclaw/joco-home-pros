@@ -1,6 +1,6 @@
 import { getCategories, getCities } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
-import { categoryIcons } from "@/components/CategoryIcons";
+import { categoryEmojis } from "@/lib/emojis";
 import type { Metadata } from "next";
 
 export const metadata = generatePageSEO({
@@ -15,24 +15,6 @@ export const revalidate = 3600; // revalidate every hour
 export default async function HomePage() {
   const categories = await getCategories();
   const cities = await getCities();
-
-  const categoryColors: Record<string, string> = {
-    hvac: "#dc2626",
-    plumbing: "#2563eb",
-    roofing: "#7c3aed",
-    landscaping: "#16a34a",
-    electrician: "#eab308",
-    painting: "#ec4899",
-    "garage-door": "#64748b",
-    "tree-service": "#15803d",
-    windows: "#0ea5e9",
-    "pest-control": "#b45309",
-    "auto-repair": "#475569",
-    dentist: "#0891b2",
-    movers: "#7c3aed",
-    cleaning: "#06b6d4",
-    pool: "#0284c7",
-  };
 
   return (
     <>
@@ -93,8 +75,8 @@ export default async function HomePage() {
               href={`/${cat.slug}`}
               className="border rounded-lg p-4 text-center hover:border-blue-400 hover:shadow-md transition"
             >
-              <div className="flex justify-center mb-2" style={{ color: categoryColors[cat.slug] || "#2563eb" }}>
-                {categoryIcons[cat.slug]?.svg || <span className="text-3xl">🔧</span>}
+              <div className="text-3xl mb-2">
+                {categoryEmojis[cat.slug] || "🔧"}
               </div>
               <h3 className="font-semibold text-sm">{cat.name}</h3>
             </a>

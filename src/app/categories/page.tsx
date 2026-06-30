@@ -1,6 +1,6 @@
 import { getCategories } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
-import { categoryIcons } from "@/components/CategoryIcons";
+import { categoryEmojis } from "@/lib/emojis";
 import type { Metadata } from "next";
 
 export const metadata = generatePageSEO({
@@ -10,13 +10,6 @@ export const metadata = generatePageSEO({
 });
 
 export const revalidate = 3600;
-
-const categoryColors: Record<string, string> = {
-  hvac: "#dc2626", plumbing: "#2563eb", roofing: "#7c3aed", landscaping: "#16a34a",
-  electrician: "#eab308", painting: "#ec4899", "garage-door": "#64748b", "tree-service": "#15803d",
-  windows: "#0ea5e9", "pest-control": "#b45309", "auto-repair": "#475569", dentist: "#0891b2",
-  movers: "#7c3aed", cleaning: "#06b6d4", pool: "#0284c7",
-};
 
 export default async function CategoriesPage() {
   const categories = await getCategories();
@@ -31,9 +24,7 @@ export default async function CategoriesPage() {
         {categories.map((cat: any) => (
           <a key={cat.slug} href={`/${cat.slug}`}
             className="border rounded-lg p-6 text-center hover:border-blue-400 hover:shadow-md transition">
-            <div className="flex justify-center mb-3" style={{ color: categoryColors[cat.slug] || "#2563eb" }}>
-              {categoryIcons[cat.slug]?.svg || <span className="text-4xl">🔧</span>}
-            </div>
+            <div className="text-4xl mb-3">{categoryEmojis[cat.slug] || "🔧"}</div>
             <h2 className="font-bold text-lg">{cat.name}</h2>
             <p className="text-sm text-gray-500 mt-2 line-clamp-2">{cat.description}</p>
           </a>
