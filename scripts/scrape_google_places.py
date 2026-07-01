@@ -101,7 +101,7 @@ GOOGLE_CATEGORY_MAP = {
         "service_type": "mobile",
     },
     "handyman": {
-        "search_terms": ["handyman", "home repair", "home improvement"],
+        "search_terms": ["handyman", "handyman service", "home repair service"],
         "included_types": ["general_contractor"],
         "service_type": "mobile",
     },
@@ -144,8 +144,45 @@ DELAY_BETWEEN_CALLS = 2  # seconds between API calls
 DELAY_ON_429 = 30  # seconds to wait on rate limit
 MAX_PAGES_PER_SEARCH = 3  # max pagination depth (3 × 20 = 60 results)
 
+# Google place types that are NOT actual service businesses — they're stores/retail.
+# Used to filter out Home Depot, Lowe's, furniture stores, etc. from service categories.
+EXCLUDED_GOOGLE_TYPES = {
+    "hardware_store", "home_improvement_store", "furniture_store", "home_goods_store",
+    "building_materials_store", "garden_center", "mattress_store", "department_store",
+    "discount_store", "shopping_mall", "warehouse_store", "wholesale_store",
+    "car_dealer", "gas_station", "convenience_store", "supermarket", "grocery_store",
+    "clothing_store", "shoe_store", "electronics_store", "book_store", "liquor_store",
+    "pet_store", "bicycle_store", "florist", "bakery", "movie_rental_store",
+    "storage", "lodging", "rv_park", "campground", "car_wash", "car_rental",
+    "parking", "atm", "bank", "church", "mosque", "synagogue", "hindu_temple",
+    "cemetery", "library", "school", "university", "hospital", "pharmacy",
+    "post_office", "city_hall", "courthouse", "police", "fire_station",
+    "tourist_attraction", "museum", "art_gallery", "amusement_park", "stadium",
+    "movie_theater", "spa", "gym", "beauty_salon", "hair_salon", "barber_shop",
+    "laundry", "dry_cleaning", "tattoo_parlor", "veterinary_care",
+}
+
+# Business names (lowercase) that should be excluded from ALL categories (retail chains, stores)
+EXCLUDED_BUSINESS_NAMES_LOWER = {
+    "lowe's home improvement", "the home depot", "home services at the home depot",
+    "menards", "ace hardware", "westlake ace hardware",
+    "westlake ace handyman services bonner springs",
+    "westlake ace handyman services kansas city metro",
+    "westlake ace handyman services overland park",
+    "harbor freight", "floor & decor", "crate & barrel",
+    "homegoods", "at home", "bomgaars", "sutherlands", "lumber one",
+    "sherwin-williams paint store", "joco mattress co.",
+    "my home contemporary furniture", "comfyfurny | living room furniture",
+    "habitat kc restore lenexa", "red door home store", "snowbird home",
+    "kbf depot", "prosource of kansas city west", "j thomas home",
+    "deck & rail supply", "kopp's carpet & decorating",
+    "one stop decorating center", "petty products inc.",
+    "rh leawood | the gallery at town center", "euston hardware",
+    "home improvement sources",
+}
+
 # Field masks
-SEARCH_FIELDS = "places.id,places.displayName,places.formattedAddress,places.location,places.businessStatus,places.googleMapsUri,places.websiteUri,places.rating,places.userRatingCount,places.nationalPhoneNumber,places.priceLevel,nextPageToken"
+SEARCH_FIELDS = "places.id,places.displayName,places.formattedAddress,places.location,places.businessStatus,places.googleMapsUri,places.websiteUri,places.rating,places.userRatingCount,places.nationalPhoneNumber,places.priceLevel,places.primaryType,places.types,nextPageToken"
 DETAIL_FIELDS = "id,displayName,formattedAddress,location,businessStatus,googleMapsUri,websiteUri,rating,userRatingCount,nationalPhoneNumber,priceLevel,regularOpeningHours,serviceArea,editorialSummary,addressComponents"
 
 
@@ -397,10 +434,39 @@ def extract_business(place, category_slug, city_slug, city_name, service_type="m
         "longitude": location.get("longitude"),
         "google_maps_url": place.get("googleMapsUri", ""),
         "primary_type": place.get("primaryTypeDisplayName", ""),
+        "primary_type_raw": place.get("primaryType", ""),
+        "google_types": place.get("types", []),
         "hours": hours,
         "business_status": place.get("businessStatus", ""),
         "editorial_summary": place.get("editorialSummary", {}).get("text", ""),
     }
+
+
+def is_retail_or_irrelevant(biz):
+    """Filter out stores, retailers, and other non-service businesses.
+    
+    Returns True if this business should be EXCLUDED from the directory.
+    Uses both Google place types and a name exclusion list.
+    """
+    name_lower = biz.get("name", "").lower().strip()
+    
+    # Check name exclusion list (exact match on lowercase)
+    if name_lower in EXCLUDED_BUSINESS_NAMES_LOWER:
+        return True
+    
+    # Check if any Google type matches excluded types
+    google_types = set(biz.get("google_types", []))
+    primary_type_raw = biz.get("primary_type_raw", "")
+    
+    # If primary type is an excluded type, filter it out
+    if primary_type_raw in EXCLUDED_GOOGLE_TYPES:
+        return True
+    
+    # If any Google type is in excluded types, filter it out
+    if google_types & EXCLUDED_GOOGLE_TYPES:
+        return True
+    
+    return False
 
 
 # ─── Main ────────────────────────────────────────────────────────────────────
@@ -452,6 +518,7 @@ def main():
     
     all_businesses = []
     seen_place_ids = set()  # Deduplicate across searches
+    filtered_count = 0  # Track how many businesses were filtered out as retail/irrelevant
     call_count = 0
     
     # ── Pass 1: Per-city searches ─────────────────────────────────────────
@@ -507,12 +574,15 @@ def main():
                         biz_city_name = city_name
                     
                     biz = extract_business(place, cat_slug, biz_city_slug, biz_city_name, service_type)
+                    if is_retail_or_irrelevant(biz):
+                        filtered_count += 1
+                        continue
                     all_businesses.append(biz)
                     new_count += 1
                 
                 print(f"{len(places)} results, {new_count} new")
                 time.sleep(DELAY_BETWEEN_CALLS)
-    
+
     # ── Pass 2: JoCo-wide search for mobile categories ─────────────────────
     if not args.skip_wide:
         print("\n" + "=" * 60)
@@ -555,6 +625,9 @@ def main():
                         biz_city_name = "Kansas City Metro"
                     
                     biz = extract_business(place, cat_slug, biz_city_slug, biz_city_name, service_type)
+                    if is_retail_or_irrelevant(biz):
+                        filtered_count += 1
+                        continue
                     all_businesses.append(biz)
                     new_count += 1
                 
@@ -580,6 +653,8 @@ def main():
     
     # ── Expand mobile-service businesses to all JoCo cities ────────────────
     print(f"\n📊 Before dedup: {len(all_businesses)} results from {call_count} API calls")
+    if filtered_count:
+        print(f"🚫 Filtered out {filtered_count} retail/irrelevant businesses (stores, furniture shops, etc.)")
     
     # First dedup by (name, category, city) — keep the one with most data
     seen = {}
