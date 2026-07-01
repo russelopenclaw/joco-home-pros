@@ -45,3 +45,8 @@ next-env.d.ts
 .env*.local
 supabase_creds.txt
 google_maps_api_key.txt
+
+# Scraped/enriched data files (contain API keys in image URLs)
+google_places_enriched.json
+google_places_test_enriched.json
+google_places_results.json
