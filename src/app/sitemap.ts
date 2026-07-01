@@ -6,7 +6,7 @@ import type { MetadataRoute } from "next";
 export const revalidate = 3600; // Revalidate every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://jocohomepros.com";
+  const baseUrl = "https://www.jocohomepros.com";
 
   const entries: MetadataRoute.Sitemap = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },

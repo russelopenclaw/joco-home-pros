@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/", "/admin/"],
     },
-    sitemap: "https://jocohomepros.com/sitemap.xml",
+    sitemap: "https://www.jocohomepros.com/sitemap.xml",
   };
 }
