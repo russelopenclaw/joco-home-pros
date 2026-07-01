@@ -1,27 +1,25 @@
 #!/usr/bin/env python3
 """
 Scrape real business data for JoCo Home Pros from Google Places API (New).
-Uses the same API Kevin already has set up for DinnerRoulette.
 
-Addresses the "service area business" problem:
-- Searches by city center + radius (not just business address)
-- Captures service_area info when available
-- For businesses with no physical storefront, stores the area they serve
-- Businesses can be listed under MULTIPLE cities they service
+v2: Service areas + pagination + JoCo-wide search
+- Mobile-service categories (HVAC, plumbing, etc.) appear on ALL JoCo city pages
+- Fixed-location categories (dentist, auto-repair) only on their physical city page
+- Pagination fetches up to 60 results per search (3 pages × 20)
+- JoCo-wide search pass catches KC-metro businesses that serve JoCo
+- Filters out businesses without phone numbers
 
 Usage:
   python3 scrape_google_places.py --api-key YOUR_KEY [--category CATEGORY] [--city CITY] [--dry-run]
 
 Prerequisites:
-  - Google Maps API key with Places API enabled
+  - Google Maps API key with Places API (New) enabled
   - Get from: https://console.cloud.google.com/apis/credentials
-  - Enable: Places API (New), Geocoding API
 
-Cost estimate:
-  - 16 categories × 9 cities = 144 Text Search calls
-  - ~20 Place Detail calls per search = ~2,880 detail calls
-  - All within free tier (10,000 Essentials + 5,000 Pro/month)
-  - Total cost: $0.00 for initial scrape
+Cost estimate (v2):
+  - Pass 1 (per-city): 16 cats × 9 cities × 3 terms = 432 searches × ~1.5 pages = ~648 calls
+  - Pass 2 (JoCo-wide): 14 mobile cats × 3 terms = 42 searches × ~1.5 pages = ~63 calls
+  - Total: ~711 API calls (well within 10K free tier/month)
 """
 
 import argparse
@@ -35,72 +33,88 @@ import urllib.parse
 
 # ─── Configuration ───────────────────────────────────────────────────────────
 
-# Our categories → Google Places type mappings
-# Google Places API uses "includedTypes" for filtering
 GOOGLE_CATEGORY_MAP = {
+    # Mobile-service categories (business comes to customer) — listed on ALL JoCo cities
     "hvac": {
         "search_terms": ["HVAC contractor", "heating and cooling", "air conditioning repair"],
-        "included_types": ["hvac_contractor", "electrician"],  # HVAC often tagged as electrician
+        "included_types": ["hvac_contractor", "electrician"],
+        "service_type": "mobile",
     },
     "plumbing": {
         "search_terms": ["plumber", "plumbing repair", "drain cleaning"],
         "included_types": ["plumber"],
+        "service_type": "mobile",
     },
     "roofing": {
         "search_terms": ["roofing contractor", "roof repair", "roofer"],
         "included_types": ["roofing_contractor", "general_contractor"],
+        "service_type": "mobile",
     },
     "landscaping": {
         "search_terms": ["landscaping", "lawn care service", "lawn maintenance"],
-        "included_types": ["general_contractor"],  # No specific landscaping type in Places
+        "included_types": ["general_contractor"],
+        "service_type": "mobile",
     },
     "electrician": {
         "search_terms": ["electrician", "electrical contractor", "electrical repair"],
         "included_types": ["electrician"],
+        "service_type": "mobile",
     },
     "painting": {
         "search_terms": ["house painter", "painting contractor", "interior painting"],
         "included_types": ["painter", "general_contractor"],
+        "service_type": "mobile",
     },
     "garage-door": {
         "search_terms": ["garage door repair", "garage door installation", "garage door service"],
-        "included_types": ["general_contractor"],  # No specific type
+        "included_types": ["general_contractor"],
+        "service_type": "mobile",
     },
     "tree-service": {
         "search_terms": ["tree service", "tree removal", "arborist"],
         "included_types": ["general_contractor"],
+        "service_type": "mobile",
     },
     "windows": {
         "search_terms": ["window replacement", "window installation", "window repair"],
         "included_types": ["general_contractor"],
+        "service_type": "mobile",
     },
     "pest-control": {
         "search_terms": ["pest control", "exterminator", "termite treatment"],
         "included_types": ["general_contractor"],
-    },
-    "auto-repair": {
-        "search_terms": ["auto repair", "car repair", "mechanic"],
-        "included_types": ["car_repair", "car_dealer"],
-    },
-    "dentist": {
-        "search_terms": ["dentist", "dental clinic", "orthodontist"],
-        "included_types": ["dentist"],
+        "service_type": "mobile",
     },
     "movers": {
         "search_terms": ["moving company", "movers", "moving service"],
         "included_types": ["moving_company"],
+        "service_type": "mobile",
     },
     "cleaning": {
         "search_terms": ["house cleaning", "cleaning service", "maid service"],
         "included_types": ["general_contractor"],
+        "service_type": "mobile",
     },
     "pool": {
         "search_terms": ["pool service", "pool maintenance", "swimming pool repair"],
         "included_types": ["general_contractor"],
+        "service_type": "mobile",
     },
     "handyman": {
         "search_terms": ["handyman", "home repair", "home improvement"],
         "included_types": ["general_contractor"],
+        "service_type": "mobile",
+    },
+    # Fixed-location categories (customer goes to business) — only their city page
+    "auto-repair": {
+        "search_terms": ["auto repair", "car repair", "mechanic"],
+        "included_types": ["car_repair", "car_dealer"],
+        "service_type": "fixed",
+    },
+    "dentist": {
+        "search_terms": ["dentist", "dental clinic", "orthodontist"],
+        "included_types": ["dentist"],
+        "service_type": "fixed",
     },
 }
 
@@ -117,7 +131,10 @@ JOCO_CITIES = {
     "de-soto": {"name": "De Soto", "lat": 38.9792, "lng": -94.9689, "radius": 8000},
 }
 
-# Google Places API (New) endpoints
+# JoCo-wide center point for catching KC-metro businesses that serve the area
+JOCO_WIDE_CENTER = {"lat": 38.93, "lng": -94.75, "radius": 25000}
+
+# API endpoints
 PLACES_TEXT_SEARCH_URL = "https://places.googleapis.com/v1/places:searchText"
 PLACES_NEARBY_SEARCH_URL = "https://places.googleapis.com/v1/places:searchNearby"
 PLACES_DETAILS_URL = "https://places.googleapis.com/v1/places/{}"
@@ -125,11 +142,10 @@ PLACES_DETAILS_URL = "https://places.googleapis.com/v1/places/{}"
 # Rate limiting
 DELAY_BETWEEN_CALLS = 2  # seconds between API calls
 DELAY_ON_429 = 30  # seconds to wait on rate limit
+MAX_PAGES_PER_SEARCH = 3  # max pagination depth (3 × 20 = 60 results)
 
-# Field masks for search (keep minimal to stay in Essentials tier)
-# Only request fields we actually need to minimize cost
-SEARCH_FIELDS = "places.id,places.displayName,places.formattedAddress,places.location,places.businessStatus,places.googleMapsUri,places.websiteUri,places.rating,places.userRatingCount,places.nationalPhoneNumber,places.priceLevel"
-# Field masks for details (Pro tier, used sparingly)
+# Field masks
+SEARCH_FIELDS = "places.id,places.displayName,places.formattedAddress,places.location,places.businessStatus,places.googleMapsUri,places.websiteUri,places.rating,places.userRatingCount,places.nationalPhoneNumber,places.priceLevel,nextPageToken"
 DETAIL_FIELDS = "id,displayName,formattedAddress,location,businessStatus,googleMapsUri,websiteUri,rating,userRatingCount,nationalPhoneNumber,priceLevel,regularOpeningHours,serviceArea,editorialSummary,addressComponents"
 
 
@@ -163,11 +179,15 @@ def google_places_request(url, api_key, body=None, method="POST", field_mask=Non
         return None
 
 
-def search_text(query, location_bias=None, api_key=None, dry_run=False):
-    """Search for places using text query with optional location bias."""
+def search_text(query, location_bias=None, api_key=None, dry_run=False, page_token=None):
+    """Search for places using text query with pagination support.
+    
+    Returns tuple of (places_list, next_page_token_or_None).
+    """
     if dry_run:
-        print(f"    [DRY RUN] Text search: '{query}' near {location_bias['name'] if location_bias else 'anywhere'}")
-        return []
+        loc_name = location_bias.get("name", f"({location_bias['lat']},{location_bias['lng']})") if location_bias else "anywhere"
+        print(f"    [DRY RUN] Text search: '{query}' near {loc_name}")
+        return [], None
 
     body = {
         "textQuery": query,
@@ -175,7 +195,14 @@ def search_text(query, location_bias=None, api_key=None, dry_run=False):
         "languageCode": "en",
     }
 
-    if location_bias:
+    if page_token:
+        # Pagination: pageToken replaces textQuery and locationBias
+        body = {
+            "pageToken": page_token,
+            "maxResultCount": 20,
+            "languageCode": "en",
+        }
+    elif location_bias:
         body["locationBias"] = {
             "circle": {
                 "center": {
@@ -192,8 +219,55 @@ def search_text(query, location_bias=None, api_key=None, dry_run=False):
     )
 
     if result and "places" in result:
-        return result["places"]
-    return []
+        next_token = result.get("nextPageToken")
+        return result["places"], next_token
+    
+    # Return empty on error (pagination failures are expected)
+    return [], None
+
+
+def search_text_paginated(query, location_bias=None, api_key=None, dry_run=False, max_pages=MAX_PAGES_PER_SEARCH):
+    """Search with pagination — fetches up to max_pages pages of results.
+    
+    Note: Google Places API (New) Text Search v1 does NOT support nextPageToken
+    in the same way as the old API. The 'nextPageToken' field is returned but
+    requires sending the exact same request body plus the pageToken parameter.
+    However, in practice, the v1 API often returns 20 results and does not
+    reliably support pagination. We attempt it but gracefully handle failures.
+    """
+    all_places = []
+    page_token = None
+    pages_fetched = 0
+    
+    # First page — standard search
+    places, next_token = search_text(
+        query, location_bias=location_bias,
+        api_key=api_key, dry_run=dry_run,
+        page_token=None,
+    )
+    all_places.extend(places)
+    pages_fetched += 1
+    
+    # Subsequent pages — if a nextToken was returned
+    while next_token and pages_fetched < max_pages:
+        page_token = next_token
+        try:
+            places, next_token = search_text(
+                query, location_bias=location_bias,
+                api_key=api_key, dry_run=dry_run,
+                page_token=page_token,
+            )
+        except Exception:
+            # Pagination often fails with Google Places API (New) — just use what we have
+            break
+        # If pagination fails (400 error), places will be empty — just stop
+        if not places:
+            break
+        all_places.extend(places)
+        pages_fetched += 1
+        time.sleep(DELAY_BETWEEN_CALLS)
+    
+    return all_places
 
 
 def search_nearby(lat, lng, radius, included_types, api_key=None, dry_run=False):
@@ -239,24 +313,23 @@ def get_place_details(place_id, api_key=None, dry_run=False):
 
 # ─── Data Processing ─────────────────────────────────────────────────────────
 
-def determine_city(place, city_info):
-    """Determine which city a business belongs to.
+def determine_city(place, city_info=None):
+    """Determine which JoCo city a business is physically located in.
     
-    For service-area businesses (like HVAC, plumbing), the listed address
-    might be in a different city than where they operate. We handle this by:
-    1. Using the address_components to find the actual city
-    2. If the business has a serviceArea, it serves multiple cities
-    3. Listing service-area businesses under ALL cities they serve
+    Returns (city_slug, city_name) if in a JoCo city, 
+    or ("out-of-area", address_city) if outside JoCo,
+    or (None, None) if we can't determine.
     """
-    # Try address components first
+    # Try address components first (most reliable)
     address_components = place.get("addressComponents", [])
     for comp in address_components:
         if "locality" in comp.get("types", []):
             city_name = comp.get("longText", "").lower()
-            # Match to our city slugs
             for slug, info in JOCO_CITIES.items():
                 if info["name"].lower() == city_name:
                     return slug, info["name"]
+            # City found but not in JoCo — it's out-of-area
+            return "out-of-area", comp.get("longText", "")
     
     # Try formatted address
     addr = place.get("formattedAddress", "").lower()
@@ -264,7 +337,11 @@ def determine_city(place, city_info):
         if info["name"].lower() in addr:
             return slug, info["name"]
     
-    # Fall back to the search city if within radius
+    # Check for Kansas City, MO — common out-of-area case
+    if "kansas city" in addr:
+        return "out-of-area", "Kansas City"
+    
+    # Fall back to nearest JoCo city by coordinates
     location = place.get("location", {})
     if location.get("latitude") and location.get("longitude"):
         min_dist = float("inf")
@@ -277,23 +354,18 @@ def determine_city(place, city_info):
                 min_dist = dist
                 best_slug = slug
                 best_name = info["name"]
-        # Only assign if within reasonable distance (~15km)
         if min_dist < 0.15:  # ~15km
             return best_slug, best_name
+        # Too far from any JoCo city
+        return "out-of-area", f"({location['latitude']:.2f}, {location['longitude']:.2f})"
     
     return None, None
 
 
-def extract_business(place, category_slug, city_slug, city_name):
+def extract_business(place, category_slug, city_slug, city_name, service_type="mobile"):
     """Extract business data from a Google Place result."""
-    # Get service area info
-    service_area = place.get("serviceArea", {})
-    serves_multiple_cities = bool(service_area)
-    
-    # Get location
     location = place.get("location", {})
     
-    # Determine price level
     price_map = {
         "PRICE_LEVEL_FREE": "$",
         "PRICE_LEVEL_INEXPENSIVE": "$$",
@@ -303,7 +375,6 @@ def extract_business(place, category_slug, city_slug, city_name):
     }
     price = price_map.get(place.get("priceLevel", ""), "")
     
-    # Get hours
     hours = []
     opening_hours = place.get("regularOpeningHours", {})
     if opening_hours and "weekdayDescriptions" in opening_hours:
@@ -313,6 +384,7 @@ def extract_business(place, category_slug, city_slug, city_name):
         "google_place_id": place.get("id", ""),
         "name": place.get("displayName", {}).get("text", ""),
         "category_slug": category_slug,
+        "service_type": service_type,
         "city_slug": city_slug,
         "city_name": city_name,
         "address": place.get("formattedAddress", ""),
@@ -326,8 +398,6 @@ def extract_business(place, category_slug, city_slug, city_name):
         "google_maps_url": place.get("googleMapsUri", ""),
         "primary_type": place.get("primaryTypeDisplayName", ""),
         "hours": hours,
-        "serves_multiple_cities": serves_multiple_cities,
-        "service_area": service_area,
         "business_status": place.get("businessStatus", ""),
         "editorial_summary": place.get("editorialSummary", {}).get("text", ""),
     }
@@ -338,11 +408,9 @@ def extract_business(place, category_slug, city_slug, city_name):
 def main():
     parser = argparse.ArgumentParser(
         description="Scrape real business data from Google Places API for JoCo Home Pros\n\n"
-        "Handles service-area businesses (HVAC, plumbing, etc.) by:\n"
-        "  1. Searching near each city center with radius\n"
-        "  2. Capturing service_area data when available\n"
-        "  3. Listing businesses under ALL cities they service\n\n"
-        "Cost: FREE for initial scrape (within 10K monthly free tier)"
+        "v2: Service areas + pagination + JoCo-wide search\n"
+        "Mobile businesses (HVAC, plumbing, etc.) appear on ALL JoCo city pages\n"
+        "Fixed-location businesses (dentist, auto repair) only on their city page"
     )
     parser.add_argument("--api-key", help="Google Places API key (or set GOOGLE_MAPS_API_KEY env var)")
     parser.add_argument("--category", help="Only scrape this category slug (e.g., 'plumbing')")
@@ -352,12 +420,12 @@ def main():
     parser.add_argument("--method", choices=["text", "nearby", "both"], default="text",
                         help="Search method: text (searchText), nearby (searchNearby), or both")
     parser.add_argument("--get-details", action="store_true", help="Fetch detailed info for each place (uses more API calls)")
+    parser.add_argument("--skip-wide", action="store_true", help="Skip the JoCo-wide search pass (only per-city)")
     args = parser.parse_args()
     
     # Get API key
     api_key = args.api_key or os.environ.get("GOOGLE_MAPS_API_KEY", "")
     if not api_key and not args.dry_run:
-        # Try reading from file
         key_file = os.path.join(os.path.dirname(__file__), "..", "google_maps_api_key.txt")
         if os.path.exists(key_file):
             with open(key_file) as f:
@@ -374,46 +442,49 @@ def main():
     categories = [args.category] if args.category else list(GOOGLE_CATEGORY_MAP.keys())
     cities = {args.city: JOCO_CITIES[args.city]} if args.city and args.city in JOCO_CITIES else JOCO_CITIES
     
-    total_searches = len(categories) * len(cities)
-    
-    print(f"🔍 JoCo Home Pros — Google Places Business Scraper")
+    print(f"🔍 JoCo Home Pros — Google Places Business Scraper v2")
     print(f"   Method: {args.method}")
-    print(f"   Categories: {len(categories)}")
+    print(f"   Categories: {len(categories)} ({sum(1 for c in categories if GOOGLE_CATEGORY_MAP.get(c, {}).get('service_type') == 'mobile')} mobile, {sum(1 for c in categories if GOOGLE_CATEGORY_MAP.get(c, {}).get('service_type') == 'fixed')} fixed)")
     print(f"   Cities: {len(cities)}")
-    print(f"   Estimated API calls: ~{total_searches * 2} (search) + {total_searches * 20 if args.get_details else 0} (details)")
-    print(f"   Cost: ~${'0.00' if total_searches * 22 < 10000 else f'{total_searches * 22 * 0.032:.2f}'} (within free tier)")
+    print(f"   Pagination: up to {MAX_PAGES_PER_SEARCH} pages per search (max {MAX_PAGES_PER_SEARCH * 20} results)")
+    print(f"   JoCo-wide pass: {'skipped' if args.skip_wide else 'enabled'}")
     print()
     
     all_businesses = []
     seen_place_ids = set()  # Deduplicate across searches
     call_count = 0
     
+    # ── Pass 1: Per-city searches ─────────────────────────────────────────
+    print("=" * 60)
+    print("PASS 1: Per-city searches")
+    print("=" * 60)
+    
     for i, cat_slug in enumerate(categories):
         cat_config = GOOGLE_CATEGORY_MAP.get(cat_slug, {})
         search_terms = cat_config.get("search_terms", [cat_slug])
-        included_types = cat_config.get("included_types", [])
+        service_type = cat_config.get("service_type", "mobile")
         
-        print(f"\n📦 Category: {cat_slug} [{i+1}/{len(categories)}]")
+        print(f"\n📦 Category: {cat_slug} [{i+1}/{len(categories)}] ({service_type})")
         
         for j, (city_slug, city_info) in enumerate(cities.items()):
             city_name = city_info["name"]
             
-            for term in search_terms[:2]:  # Use top 2 search terms per category
+            for term in search_terms:
                 print(f"  🔎 '{term}' in {city_name}...", end=" ", flush=True)
                 
                 if args.method in ("text", "both"):
-                    places = search_text(
+                    places = search_text_paginated(
                         f"{term} in {city_name} Kansas",
                         location_bias=city_info,
                         api_key=api_key,
                         dry_run=args.dry_run,
                     )
-                    call_count += 1
+                    call_count += 1  # At least 1 call per search
                 elif args.method == "nearby":
                     places = search_nearby(
                         city_info["lat"], city_info["lng"],
                         city_info.get("radius", 10000),
-                        included_types,
+                        cat_config.get("included_types", []),
                         api_key=api_key,
                         dry_run=args.dry_run,
                     )
@@ -428,33 +499,69 @@ def main():
                         continue
                     seen_place_ids.add(place_id)
                     
-                    # Determine which city this business is in
+                    # Determine physical city
                     biz_city_slug, biz_city_name = determine_city(place, city_info)
                     
-                    # If the business is actually in a different city, still add it
-                    # under the search city (service-area businesses)
                     if not biz_city_slug:
                         biz_city_slug = city_slug
                         biz_city_name = city_name
                     
-                    biz = extract_business(place, cat_slug, biz_city_slug, biz_city_name)
-                    
-                    # For service-area businesses, also add to the search city
-                    if biz["serves_multiple_cities"] and biz_city_slug != city_slug:
-                        # Add a copy under the search city too
-                        biz_search_city = biz.copy()
-                        biz_search_city["city_slug"] = city_slug
-                        biz_search_city["city_name"] = city_name
-                        biz_search_city["service_area_note"] = f"Business based in {biz_city_name}, also serves {city_name}"
-                        all_businesses.append(biz_search_city)
-                    
+                    biz = extract_business(place, cat_slug, biz_city_slug, biz_city_name, service_type)
                     all_businesses.append(biz)
                     new_count += 1
                 
                 print(f"{len(places)} results, {new_count} new")
                 time.sleep(DELAY_BETWEEN_CALLS)
     
-    # Fetch details if requested
+    # ── Pass 2: JoCo-wide search for mobile categories ─────────────────────
+    if not args.skip_wide:
+        print("\n" + "=" * 60)
+        print("PASS 2: JoCo-wide search (mobile service categories)")
+        print("=" * 60)
+        
+        for i, cat_slug in enumerate(categories):
+            cat_config = GOOGLE_CATEGORY_MAP.get(cat_slug, {})
+            service_type = cat_config.get("service_type", "mobile")
+            search_terms = cat_config.get("search_terms", [cat_slug])
+            
+            # Only do JoCo-wide search for mobile service categories
+            if service_type != "mobile":
+                continue
+            
+            print(f"\n📦 Category: {cat_slug} (JoCo-wide)")
+            
+            for term in search_terms[:2]:  # Top 2 terms for wide search
+                print(f"  🔎 '{term}' across JoCo...", end=" ", flush=True)
+                
+                places = search_text_paginated(
+                    f"{term} Johnson County Kansas",
+                    location_bias=JOCO_WIDE_CENTER,
+                    api_key=api_key,
+                    dry_run=args.dry_run,
+                )
+                call_count += 1
+                
+                new_count = 0
+                for place in places:
+                    place_id = place.get("id", "")
+                    if place_id in seen_place_ids:
+                        continue
+                    seen_place_ids.add(place_id)
+                    
+                    biz_city_slug, biz_city_name = determine_city(place)
+                    
+                    if not biz_city_slug:
+                        biz_city_slug = "out-of-area"
+                        biz_city_name = "Kansas City Metro"
+                    
+                    biz = extract_business(place, cat_slug, biz_city_slug, biz_city_name, service_type)
+                    all_businesses.append(biz)
+                    new_count += 1
+                
+                print(f"{len(places)} results, {new_count} new")
+                time.sleep(DELAY_BETWEEN_CALLS)
+    
+    # ── Fetch details if requested ────────────────────────────────────────
     if args.get_details and not args.dry_run:
         print(f"\n📡 Fetching details for {len(seen_place_ids)} businesses...")
         for i, place_id in enumerate(seen_place_ids):
@@ -462,7 +569,6 @@ def main():
                 print(f"  Progress: {i}/{len(seen_place_ids)}")
             details = get_place_details(place_id, api_key=api_key, dry_run=args.dry_run)
             if details:
-                # Merge details into existing business records
                 for biz in all_businesses:
                     if biz["google_place_id"] == place_id:
                         if details.get("editorialSummary", {}).get("text"):
@@ -472,31 +578,75 @@ def main():
             call_count += 1
             time.sleep(DELAY_BETWEEN_CALLS)
     
-    # ── Deduplicate by name + category + city ─────────────────────────────────
+    # ── Expand mobile-service businesses to all JoCo cities ────────────────
     print(f"\n📊 Before dedup: {len(all_businesses)} results from {call_count} API calls")
     
+    # First dedup by (name, category, city) — keep the one with most data
     seen = {}
     for biz in all_businesses:
         key = f"{biz['name'].lower().strip()}|{biz['category_slug']}|{biz['city_slug']}"
         if key not in seen:
             seen[key] = biz
         else:
-            # Keep the one with more data
             existing = seen[key]
             if len(str(biz)) > len(str(existing)):
                 seen[key] = biz
     
-    businesses = list(seen.values())
-    print(f"📊 After dedup: {len(businesses)} unique businesses")
+    deduped = list(seen.values())
+    print(f"📊 After dedup: {len(deduped)} unique (name, category, city) combos")
+    
+    # For mobile-service businesses, expand to ALL JoCo cities
+    # A plumber in Merriam should appear on every JoCo city page
+    expanded = []
+    for biz in deduped:
+        if biz["service_type"] == "mobile" and biz["city_slug"] != "out-of-area":
+            # Add the business to every JoCo city
+            primary_city = biz["city_slug"]
+            for slug, info in JOCO_CITIES.items():
+                expanded_biz = biz.copy()
+                expanded_biz["city_slug"] = slug
+                expanded_biz["city_name"] = info["name"]
+                expanded_biz["is_primary_city"] = (slug == primary_city)
+                expanded.append(expanded_biz)
+        elif biz["service_type"] == "mobile" and biz["city_slug"] == "out-of-area":
+            # KC-metro business that serves JoCo — add to all cities
+            for slug, info in JOCO_CITIES.items():
+                expanded_biz = biz.copy()
+                expanded_biz["city_slug"] = slug
+                expanded_biz["city_name"] = info["name"]
+                expanded_biz["is_primary_city"] = False
+                expanded.append(expanded_biz)
+        else:
+            # Fixed-location: only their physical city
+            biz["is_primary_city"] = True
+            expanded.append(biz)
+    
+    # Final dedup (a business might appear in the same city from multiple searches)
+    final_seen = {}
+    for biz in expanded:
+        key = f"{biz['name'].lower().strip()}|{biz['category_slug']}|{biz['city_slug']}"
+        if key not in final_seen:
+            final_seen[key] = biz
+        else:
+            existing = final_seen[key]
+            # Prefer the one where is_primary_city is True
+            if biz.get("is_primary_city") and not existing.get("is_primary_city"):
+                final_seen[key] = biz
+            # Or the one with more data
+            elif len(str(biz)) > len(str(existing)):
+                final_seen[key] = biz
+    
+    businesses = list(final_seen.values())
+    print(f"📊 After expansion: {len(businesses)} business-city entries")
     
     # Filter out businesses without phone numbers
     before_phone_filter = len(businesses)
     businesses = [b for b in businesses if b.get("phone")]
     filtered = before_phone_filter - len(businesses)
     if filtered:
-        print(f"📞 Filtered out {filtered} businesses without phone numbers")
+        print(f"📞 Filtered out {filtered} entries without phone numbers")
     
-    # ── Save ─────────────────────────────────────────────────────────────────
+    # ── Save ──────────────────────────────────────────────────────────────
     with open(args.output, "w") as f:
         json.dump(businesses, f, indent=2)
     print(f"✅ Saved to {args.output}")
@@ -504,22 +654,25 @@ def main():
     # Summary
     print(f"\n📋 Summary by category:")
     for cat in categories:
+        mobile = GOOGLE_CATEGORY_MAP.get(cat, {}).get("service_type") == "mobile"
         count = len([b for b in businesses if b["category_slug"] == cat])
-        print(f"   {cat}: {count} businesses")
+        cities_count = len(set(b["city_slug"] for b in businesses if b["category_slug"] == cat))
+        label = "mobile" if mobile else "fixed"
+        print(f"   {cat}: {count} entries across {cities_count} cities ({label})")
     
     print(f"\n📋 Summary by city:")
     for city_slug, city_info in cities.items():
         count = len([b for b in businesses if b["city_slug"] == city_slug])
         print(f"   {city_info['name']}: {count} businesses")
     
-    # Service-area business analysis
-    service_area_biz = [b for b in businesses if b.get("serves_multiple_cities")]
-    if service_area_biz:
-        print(f"\n🏠 Service-area businesses (serve multiple cities): {len(service_area_biz)}")
-        for b in service_area_biz[:5]:
-            print(f"   - {b['name']} ({b['category_slug']}) — based in {b['city_name']}")
-        if len(service_area_biz) > 5:
-            print(f"   ... and {len(service_area_biz) - 5} more")
+    # Out-of-area businesses
+    out_of_area = [b for b in businesses if b.get("city_slug") == "out-of-area"]
+    if out_of_area:
+        print(f"\n🏠 Out-of-area businesses (KC metro, serving JoCo): {len(out_of_area)}")
+        for b in out_of_area[:5]:
+            print(f"   - {b['name']} ({b['category_slug']}) — {b.get('city_name', 'unknown')}")
+        if len(out_of_area) > 5:
+            print(f"   ... and {len(out_of_area) - 5} more")
 
 
 if __name__ == "__main__":

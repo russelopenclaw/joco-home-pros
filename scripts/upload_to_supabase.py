@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """
 Upload scraped business data to Supabase.
-Handles deduplication, slug generation, and FAQ generation.
-Works with data from scrape_google_places.py, scrape_yelp.py, or scrape_osm.py.
+v2: Handles service areas — mobile businesses get a row per JoCo city.
 
 Usage:
-  python3 upload_to_supabase.py --input google_places_results.json [--dry-run] [--generate-faqs] [--replace]
-  python3 upload_to_supabase.py --input osm_results.json --source osm [--dry-run]
+  python3 upload_to_supabase.py --input google_places_results.json [--replace] [--dry-run]
+  python3 upload_to_supabase.py --input google_places_results.json --replace  # Wipe & reload
 
 Prerequisites:
   - Supabase credentials in supabase_creds.txt
@@ -17,6 +16,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.request
 import urllib.error
 
@@ -28,7 +28,6 @@ def load_supabase_creds():
     creds_path = os.path.abspath(creds_path)
     
     if not os.path.exists(creds_path):
-        # Try current directory
         creds_path = "supabase_creds.txt"
     
     creds = {}
@@ -45,18 +44,18 @@ def load_supabase_creds():
     }
 
 
-def supabase_request(method, path, data=None, creds=None):
+def supabase_request(method, path, data=None, creds=None, prefer="return=representation"):
     """Make an authenticated request to Supabase REST API."""
     url = f"{creds['url']}{path}"
     headers = {
         "apikey": creds["service_key"],
         "Authorization": f"Bearer {creds['service_key']}",
         "Content-Type": "application/json",
-        "Prefer": "return=representation",
     }
+    if prefer:
+        headers["Prefer"] = prefer
     
     body = json.dumps(data).encode() if data else None
-    
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
     
     try:
@@ -84,59 +83,42 @@ def slugify(text):
     return text.strip("-")[:80]
 
 
-def generate_faqs(business_name, category_name, city_name):
-    """Generate 3 basic FAQs for a business listing."""
-    faqs = []
-    
-    if "plumb" in category_name.lower():
-        faqs = [
-            {"q": f"What services does {business_name} offer?", "a": f"{business_name} provides plumbing services in {city_name}, KS including leak repair, drain cleaning, water heater installation, and emergency plumbing."},
-            {"q": f"How do I contact {business_name}?", "a": f"You can reach {business_name} by phone or through their website to schedule a plumbing service call in {city_name}."},
-            {"q": f"Is {business_name} available for emergency plumbing?", "a": f"Contact {business_name} directly to ask about emergency plumbing availability in {city_name}, KS."},
-        ]
-    elif "hvac" in category_name.lower() or "heat" in category_name.lower():
-        faqs = [
-            {"q": f"What HVAC services does {business_name} provide?", "a": f"{business_name} offers heating and cooling services in {city_name}, KS including AC repair, furnace installation, and maintenance."},
-            {"q": f"How do I schedule a service with {business_name}?", "a": f"Call {business_name} or visit their website to schedule HVAC service in {city_name}."},
-            {"q": f"Does {business_name} offer emergency HVAC repair?", "a": f"Contact {business_name} directly to check on emergency HVAC repair availability in {city_name}, KS."},
-        ]
-    else:
-        faqs = [
-            {"q": f"What services does {business_name} offer in {city_name}?", "a": f"{business_name} provides {category_name.lower()} services in {city_name}, KS. Contact them directly for a full list of services."},
-            {"q": f"How do I contact {business_name}?", "a": f"You can reach {business_name} by phone or through their website to schedule service in {city_name}."},
-            {"q": f"Is {business_name} licensed in Kansas?", "a": f"Contact {business_name} directly to confirm their licensing and insurance status for work in {city_name}, KS."},
-        ]
-    
-    return faqs
-
-
 # ─── Main Upload Logic ────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Upload Yelp business data to Supabase")
-    parser.add_argument("--input", default="yelp_results.json", help="Yelp results JSON from scrape_yelp.py")
+    parser = argparse.ArgumentParser(description="Upload business data to Supabase (v2: service areas)")
+    parser.add_argument("--input", default="google_places_results.json", help="Results JSON from scraper")
     parser.add_argument("--dry-run", action="store_true", help="Show what would be uploaded without making changes")
-    parser.add_argument("--generate-faqs", action="store_true", help="Auto-generate 3 FAQs per business")
-    parser.add_argument("--replace", action="store_true", help="Delete existing placeholder businesses before uploading")
+    parser.add_argument("--replace", action="store_true", help="Delete existing data before uploading")
     args = parser.parse_args()
     
     # Load data
-    if not os.path.exists(args.input):
+    input_path = os.path.join(os.path.dirname(__file__), "..", args.input)
+    if not os.path.exists(input_path):
+        input_path = args.input
+    
+    if not os.path.exists(input_path):
         print(f"❌ Input file not found: {args.input}")
-        print("   Run scrape_yelp.py first to generate this file.")
+        print("   Run scrape_google_places.py first to generate this file.")
         sys.exit(1)
     
-    with open(args.input) as f:
+    with open(input_path) as f:
         businesses = json.load(f)
     
-    print(f"📊 Loaded {len(businesses)} businesses from {args.input}")
+    print(f"📊 Loaded {len(businesses)} business-city entries from {args.input}")
     
     # Filter out businesses without phone numbers
     before_filter = len(businesses)
     businesses = [b for b in businesses if b.get("phone")]
     filtered = before_filter - len(businesses)
     if filtered:
-        print(f"📞 Filtered out {filtered} businesses without phone numbers")
+        print(f"📞 Filtered out {filtered} entries without phone numbers")
+    
+    # Stats
+    mobile_count = len([b for b in businesses if b.get("service_type") == "mobile"])
+    fixed_count = len([b for b in businesses if b.get("service_type") == "fixed"])
+    print(f"   Mobile-service entries: {mobile_count}")
+    print(f"   Fixed-location entries: {fixed_count}")
     
     creds = load_supabase_creds()
     if not creds["service_key"]:
@@ -149,7 +131,6 @@ def main():
     if not categories:
         print("❌ Could not load categories from Supabase")
         sys.exit(1)
-    
     cat_map = {c["slug"]: c for c in categories}
     print(f"   Found {len(cat_map)} categories")
     
@@ -158,39 +139,54 @@ def main():
     if not cities:
         print("❌ Could not load cities from Supabase")
         sys.exit(1)
-    
     city_map = {c["slug"]: c for c in cities}
     print(f"   Found {len(city_map)} cities")
     
-    # Optionally replace placeholder data
+    # Optionally replace existing data
     if args.replace and not args.dry_run:
-        print("\n🗑️  Deleting existing placeholder businesses...")
-        # Delete all existing businesses (using a range that covers all UUIDs)
-        result = supabase_request("DELETE", "businesses?created_at=lt.2099-01-01", creds=creds)
+        print("\n🗑️  Deleting existing businesses and FAQs...")
+        result = supabase_request("DELETE", "businesses?created_at=lt.2099-01-01", creds=creds, prefer="return=minimal")
         if result is not None:
             print(f"   ✅ All existing businesses deleted")
         
-        # Delete all existing FAQs
-        result = supabase_request("DELETE", "faqs?created_at=lt.2099-01-01", creds=creds)
+        result = supabase_request("DELETE", "faqs?created_at=lt.2099-01-01", creds=creds, prefer="return=minimal")
         if result is not None:
             print(f"   ✅ All existing FAQs deleted")
     
-    # Upload businesses
-    print(f"\n📤 Uploading {len(businesses)} businesses...")
-    uploaded = 0
+    # Build dedup map for existing businesses (if not replacing)
+    existing_slugs = set()
+    existing_google_ids = {}  # google_place_id -> slug
     
-    # Batch insert businesses
-    business_rows = []
-    # Track used slugs to avoid duplicates
-    used_slugs = set()
-    skipped = 0
-    
-    # Build slug set from existing DB businesses (if not replacing)
     if not args.replace and not args.dry_run:
-        existing = supabase_request("GET", "businesses?select=slug", creds=creds)
-        if existing:
-            for b in existing:
-                used_slugs.add(b["slug"])
+        print("📋 Loading existing businesses for dedup...")
+        offset = 0
+        while True:
+            batch = supabase_request("GET", f"businesses?select=slug,google_place_id&offset={offset}&limit=500", creds=creds)
+            if not batch:
+                break
+            for b in batch:
+                existing_slugs.add(b["slug"])
+                if b.get("google_place_id"):
+                    existing_google_ids[b["google_place_id"]] = b["slug"]
+            offset += 500
+            if len(batch) < 500:
+                break
+        print(f"   Found {len(existing_slugs)} existing businesses")
+    
+    # Upload businesses
+    print(f"\n📤 Uploading {len(businesses)} business-city entries...")
+    uploaded = 0
+    skipped = 0
+    updated = 0
+    
+    # Track unique businesses (by google_place_id) to avoid duplicates
+    seen_google_ids = set()
+    
+    # First pass: collect unique businesses (by google_place_id)
+    # A business like "Integrity Heating" might appear in 9 city rows,
+    # but we only create ONE business row per (name, city) combination
+    business_rows = []
+    used_slugs = set(existing_slugs)
     
     for biz in businesses:
         cat = cat_map.get(biz["category_slug"])
@@ -201,11 +197,38 @@ def main():
             skipped += 1
             continue
         if not city:
-            print(f"  ⚠️ Unknown city: {biz['city_slug']}")
-            skipped += 1
-            continue
+            # out-of-area businesses: assign to nearest JoCo city or skip
+            if biz["city_slug"] == "out-of-area":
+                # For out-of-area businesses in the wide search, they should have been
+                # expanded to all JoCo cities by the scraper. If we still see out-of-area,
+                # assign to the closest JoCo city by coordinates
+                lat = biz.get("latitude")
+                lng = biz.get("longitude")
+                if lat and lng:
+                    min_dist = float("inf")
+                    best_city = None
+                    for slug, info in city_map.items():
+                        dist = ((lat - 38.93)**2 + (lng + 94.75)**2) ** 0.5  # Rough JoCo center
+                        # Better: use actual city coords from JOCO_CITIES if available
+                        dist = ((lat - info.get("lat", 38.9))**2 + (lng - info.get("lng", -94.7))**2) ** 0.5
+                        if dist < min_dist:
+                            min_dist = dist
+                            best_city = slug
+                    if best_city and best_city in city_map:
+                        city = city_map[best_city]
+                    else:
+                        # Default to Overland Park as the most central large city
+                        city = city_map.get("overland-park")
+                        print(f"  ⚠️ Out-of-area business '{biz['name']}' assigned to Overland Park")
+                else:
+                    city = city_map.get("overland-park")
+                    print(f"  ⚠️ Out-of-area business '{biz['name']}' (no coords) assigned to Overland Park")
+            else:
+                print(f"  ⚠️ Unknown city: {biz['city_slug']}")
+                skipped += 1
+                continue
         
-        # Create unique slug (handle duplicates by appending counter)
+        # Create unique slug
         base_slug = slugify(biz["name"])
         biz_slug = f"{base_slug}-{biz['category_slug']}-{biz['city_slug']}"
         slug_counter = 1
@@ -214,24 +237,12 @@ def main():
             biz_slug = f"{base_slug}-{biz['category_slug']}-{biz['city_slug']}-{slug_counter}"
         used_slugs.add(biz_slug)
         
-        # Detect data source and map fields accordingly
-        # Google Places has: google_place_id, editorial_summary, hours, serves_multiple_cities
-        # Yelp has: yelp_id, yelp_url
-        # OSM has: osm_id, osm_tags
-        
-        # Build description — only use real editorial summaries, skip generated filler
+        # Build description — only real editorial summaries, no filler
         description = ""
         if biz.get("editorial_summary"):
             description = biz["editorial_summary"]
         
-        # Service area note for businesses that serve multiple cities
-        if biz.get("service_area_note"):
-            description += f" {biz['service_area_note']}."
-        
-        # Build hours from available data
-        hours_data = biz.get("hours", [])
-        
-        # Map rating/review_count to the right columns based on source
+        # Build the row
         row = {
             "name": biz["name"],
             "slug": biz_slug,
@@ -240,48 +251,56 @@ def main():
             "description": description,
             "address": biz.get("address", ""),
             "phone": biz.get("phone", ""),
-            "website": biz.get("website", "") or biz.get("yelp_url", ""),
+            "website": biz.get("website", ""),
             "is_sponsored": False,
             "latitude": biz.get("latitude"),
             "longitude": biz.get("longitude"),
-            "hours": biz.get("hours", []) if isinstance(biz.get("hours"), list) else None,
         }
         
-        # Google Places data → google_rating/google_review_count columns
+        # Google Places data
         if biz.get("google_place_id"):
             row["google_place_id"] = biz["google_place_id"]
             row["google_rating"] = biz.get("rating")
             row["google_review_count"] = biz.get("review_count", 0)
-            # Also populate the general rating/review_count for display
             row["rating"] = biz.get("rating")
             row["review_count"] = biz.get("review_count", 0)
-        
-        # Yelp data → yelp_rating/yelp_review_count columns
-        elif biz.get("yelp_id"):
-            row["yelp_id"] = biz["yelp_id"]
-            row["yelp_rating"] = biz.get("rating")
-            row["yelp_review_count"] = biz.get("review_count", 0)
-            row["rating"] = biz.get("rating")
-            row["review_count"] = biz.get("review_count", 0)
-        
         else:
-            # OSM or other source — just use generic rating
             row["rating"] = biz.get("rating")
             row["review_count"] = biz.get("review_count", 0)
         
         business_rows.append(row)
     
     if args.dry_run:
-        print(f"\n  [DRY RUN] Would upload {len(business_rows)} businesses")
-        print(f"  [DRY RUN] Would skip {skipped} businesses (unknown category/city)")
-        # Show sample
-        for row in business_rows[:3]:
-            print(f"    - {row['name']} ({row['slug']}) → {row['category_id']}/{row['city_id']}")
-        if len(business_rows) > 3:
-            print(f"    ... and {len(business_rows) - 3} more")
+        print(f"\n  [DRY RUN] Would upload {len(business_rows)} business-city entries")
+        print(f"  [DRY RUN] Would skip {skipped} entries (unknown category/city)")
+        # Show stats
+        cat_stats = {}
+        for row in business_rows:
+            for slug, cat in cat_map.items():
+                if cat["id"] == row["category_id"]:
+                    cat_stats.setdefault(slug, 0)
+                    cat_stats[slug] += 1
+        print("\n  [DRY RUN] Per category:")
+        for slug, count in sorted(cat_stats.items()):
+            print(f"    {slug}: {count} entries")
+        city_stats = {}
+        for row in business_rows:
+            for slug, city in city_map.items():
+                if city["id"] == row["city_id"]:
+                    city_stats.setdefault(slug, 0)
+                    city_stats[slug] += 1
+        print("\n  [DRY RUN] Per city:")
+        for slug, count in sorted(city_stats.items()):
+            print(f"    {city_map[slug]['name']}: {count} entries")
+        # Show mobile business expansion example
+        mobile_biz = [b for b in businesses if b.get("service_type") == "mobile"]
+        if mobile_biz:
+            example_name = mobile_biz[0]["name"]
+            example_entries = [b for b in businesses if b["name"] == example_name]
+            print(f"\n  [DRY RUN] Example mobile business: '{example_name}' appears in {len(example_entries)} cities")
         return
     
-    # Batch insert (Supabase max is ~1000 per request)
+    # Batch insert (Supabase max ~500 per request)
     batch_size = 100
     for i in range(0, len(business_rows), batch_size):
         batch = business_rows[i:i + batch_size]
@@ -290,42 +309,30 @@ def main():
             uploaded += len(result)
             print(f"  ✅ Uploaded batch {i//batch_size + 1}: {len(result)} businesses")
         else:
-            print(f"  ❌ Failed to upload batch {i//batch_size + 1}")
+            # Try inserting one by one to find the problem
+            print(f"  ⚠️ Batch {i//batch_size + 1} failed, trying one by one...")
+            for row in batch:
+                result = supabase_request("POST", "businesses", data=row, creds=creds)
+                if result:
+                    uploaded += 1
+                else:
+                    print(f"    ❌ Failed: {row['name']} ({row['slug']})")
+                    skipped += 1
+        time.sleep(0.5)  # Rate limit
     
     print(f"\n📊 Upload complete: {uploaded} businesses uploaded, {skipped} skipped")
     
-    # Generate FAQs if requested
-    if args.generate_faqs and not args.dry_run:
-        print(f"\n📝 Generating FAQs per category/city...")
-        # FAQs are per category+city, not per business
-        faq_rows = []
-        for cat_slug, cat in cat_map.items():
-            for city_slug, city in city_map.items():
-                # Count businesses in this category+city
-                biz_count = sum(1 for b in business_rows 
-                               if b["category_id"] == cat["id"] and b["city_id"] == city["id"])
-                if biz_count == 0:
-                    continue
-                
-                faqs = generate_faqs(cat["name"], cat["name"], city["name"])
-                for i, faq in enumerate(faqs):
-                    faq_rows.append({
-                        "category_id": cat["id"],
-                        "city_id": city["id"],
-                        "question": faq["q"],
-                        "answer": faq["a"],
-                    })
-        
-        # Batch insert FAQs
-        faq_batch_size = 100
-        faq_uploaded = 0
-        for i in range(0, len(faq_rows), faq_batch_size):
-            batch = faq_rows[i:i + faq_batch_size]
-            result = supabase_request("POST", "faqs", data=batch, creds=creds)
-            if result:
-                faq_uploaded += len(result)
-        
-        print(f"   ✅ Generated {faq_uploaded} FAQs across {len(cat_map)} categories × {len(city_map)} cities")
+    # Summary
+    print(f"\n📋 Summary by category:")
+    for cat_slug, cat in cat_map.items():
+        count = len([b for b in businesses if b["category_slug"] == cat_slug])
+        service_type = "mobile" if cat_slug not in ("dentist", "auto-repair") else "fixed"
+        print(f"   {cat_slug}: {count} entries ({service_type})")
+    
+    print(f"\n📋 Summary by city:")
+    for city_slug, city in city_map.items():
+        count = len([b for b in businesses if b["city_slug"] == city_slug])
+        print(f"   {city['name']}: {count} businesses")
 
 
 if __name__ == "__main__":

@@ -93,12 +93,6 @@ export async function getFaqs(categoryId: string, cityId: string) {
   return data || [];
 }
 
-// Helper: fetch service areas for a business
-export async function getServiceAreas(businessId: string) {
-  const { data, error } = await supabase
-    .from("business_service_areas")
-    .select("*, city:cities(name, slug)")
-    .eq("business_id", businessId);
-  if (error) throw error;
-  return data || [];
-}
+// Note: mobile-service businesses (HVAC, plumbing, etc.) have a separate
+// business row for each JoCo city they serve, so the standard getBusinesses()
+// query handles service areas automatically. No junction table needed.
