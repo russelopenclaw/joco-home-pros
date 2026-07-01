@@ -44,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // Business detail pages (dynamic from Supabase)
+  // Business detail pages (from business_cities junction table)
   try {
     for (const cat of categories) {
       const catData = await getCategoryBySlug(cat.slug);

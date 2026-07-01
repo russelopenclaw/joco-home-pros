@@ -1,4 +1,4 @@
-import { getBusinessBySlug, getCategoryBySlug, getCityBySlug, getBusinesses, getCities } from "@/lib/supabase";
+import { getBusinessBySlug, getBusinesses, getCities } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
 import BusinessDetail from "@/components/BusinessDetail";
 import type { Metadata } from "next";
@@ -33,8 +33,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!business) {
     return { title: "Business Not Found" };
   }
-  const cat = await getCategoryBySlug(business.category?.slug || "");
-  const city = await getCityBySlug(business.city?.slug || "");
+  // category and city are embedded in the business listing now
+  const cat = business.category;
+  const city = business.city;
   const schemaType = SCHEMA_TYPE_MAP[cat?.slug || ""] || "LocalBusiness";
 
   const title = `${business.name} – ${cat?.name || "Home Services"} in ${city?.name || "Johnson County"}, KS`;
