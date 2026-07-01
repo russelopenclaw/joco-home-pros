@@ -268,6 +268,14 @@ def main():
             row["rating"] = biz.get("rating")
             row["review_count"] = biz.get("review_count", 0)
         
+        # Enrichment data (hours, photo, phone)
+        if biz.get("hours"):
+            row["hours"] = biz["hours"]  # JSON array of weekday descriptions
+        if biz.get("image_url"):
+            row["image_url"] = biz["image_url"]
+        if biz.get("phone_formatted"):
+            row["phone"] = biz["phone_formatted"]  # Override with formatted phone
+        
         business_rows.append(row)
     
     if args.dry_run:

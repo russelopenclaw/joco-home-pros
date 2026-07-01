@@ -88,7 +88,7 @@ Return ONLY the JSON array, no other text."""
         "model": "qwen2.5-coder:7b",
         "prompt": prompt,
         "stream": False,
-        "options": {"temperature": 0.7, "num_predict": 2048}
+        "options": {"temperature": 0.7, "num_predict": 3072}
     }).encode()
 
     req = urllib.request.Request(
@@ -111,7 +111,15 @@ Return ONLY the JSON array, no other text."""
                     faqs = json.loads(json_match.group())
                     return faqs
                 except json.JSONDecodeError:
-                    pass
+                    # Try to fix truncated JSON by closing it
+                    partial = json_match.group()
+                    if not partial.rstrip().endswith(']'):
+                        partial = partial.rstrip().rstrip(',') + '}]'
+                    try:
+                        faqs = json.loads(partial)
+                        return faqs
+                    except json.JSONDecodeError:
+                        pass
             
             print(f"  ⚠️ Could not parse LLM response for {cat_slug}/{city_slug}")
             print(f"  Response: {response_text[:200]}")
@@ -133,7 +141,6 @@ def upload_faqs(faqs: list[dict], category_id: str, city_id: str, supabase_url: 
             "city_id": city_id,
             "question": faq["question"],
             "answer": faq["answer"],
-            "sort_order": i,
         })
     
     # Upsert in batches

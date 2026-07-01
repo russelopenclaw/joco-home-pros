@@ -58,6 +58,17 @@ export default function BusinessDetail({ business, category, city, related, cate
         <div className="grid md:grid-cols-3 gap-8">
           {/* Left: Main info */}
           <div className="md:col-span-2">
+            {/* Business photo */}
+            {business.image_url && (
+              <div className="mb-4 rounded-lg overflow-hidden bg-gray-100">
+                <img
+                  src={business.image_url}
+                  alt={business.name}
+                  className="w-full h-64 object-cover"
+                  loading="lazy"
+                />
+              </div>
+            )}
             {/* Business name + rating */}
             <h1 className="text-3xl font-bold text-gray-900">{business.name}</h1>
             <div className="flex items-center gap-3 mt-2">
