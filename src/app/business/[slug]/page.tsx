@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const title = `${business.name} – ${cat?.name || "Home Services"} in ${city?.name || "Johnson County"}, KS`;
   const description = business.description
     ? business.description
-    : `${business.name} is a ${cat?.name?.toLowerCase() || "home service"} serving ${city?.name || "Johnson County"}, KS.${business.rating ? ` Rated ${business.rating}/5 stars with ${business.review_count} reviews.` : ""} Call ${business.phone || "for a free quote"}.`;
+    : `${business.name} – ${cat?.name?.toLowerCase() || "home service"} in ${city?.name || "Johnson County"}, KS.${business.rating ? ` Rated ${business.rating}/5 ⭐ with ${business.review_count} reviews.` : ""} ${business.phone ? `Call ${business.phone}.` : "Get a free quote."}`;
 
   return generatePageSEO({
     title,
@@ -117,11 +117,27 @@ export default async function BusinessPage({ params }: { params: Params }) {
   if (cat) schema.areaServed = { "@type": "City", "name": city?.name || "Johnson County" };
   if (business.image_url) schema.image = business.image_url;
 
+  // Build BreadcrumbList schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.jocohomepros.com" },
+      { "@type": "ListItem", "position": 2, "name": cat?.name || "Services", "item": `https://www.jocohomepros.com/${cat?.slug || ""}` },
+      { "@type": "ListItem", "position": 3, "name": city?.name || "", "item": `https://www.jocohomepros.com/${cat?.slug || ""}/${city?.slug || ""}` },
+      { "@type": "ListItem", "position": 4, "name": business.name },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <BusinessDetail business={business} category={cat} city={city} related={related} cities={cities} />
     </>

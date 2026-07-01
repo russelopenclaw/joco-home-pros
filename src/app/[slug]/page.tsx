@@ -47,6 +47,17 @@ export default async function SlugPage({ params }: { params: Params }) {
     // Category page
     return (
       <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.jocohomepros.com" },
+              { "@type": "ListItem", "position": 2, "name": cat.name },
+            ],
+          }) }}
+        />
         <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-12 px-4">
           <div className="max-w-5xl mx-auto">
             <div className="text-blue-200 text-sm mb-2">
@@ -88,6 +99,17 @@ export default async function SlugPage({ params }: { params: Params }) {
     // City page
     return (
       <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.jocohomepros.com" },
+              { "@type": "ListItem", "position": 2, "name": city.name },
+            ],
+          }) }}
+        />
         <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-12 px-4">
           <div className="max-w-5xl mx-auto">
             <div className="text-blue-200 text-sm mb-2">

@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const city = await getCityBySlug(citySlug);
   return generatePageSEO({
     title: `Best ${cat.name} in ${city.name}, KS`,
-    description: `Compare trusted ${cat.name.toLowerCase()} serving ${city.name}, Kansas. Ratings, reviews, and contact info for local professionals.`,
+    description: `Find top-rated ${cat.name.toLowerCase()} in ${city.name}, KS. Compare prices, read reviews, and contact local ${cat.name.toLowerCase()} pros near you.`,
     path: `/${cat.slug}/${city.slug}`,
   });
 }
@@ -49,6 +49,17 @@ export default async function CategoryCityPage({ params, searchParams }: { param
   const businesses = result.businesses || [];
   const total = result.total || 0;
   const totalPages = result.totalPages || 0;
+
+  // Build BreadcrumbList schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.jocohomepros.com" },
+      { "@type": "ListItem", "position": 2, "name": cat.name, "item": `https://www.jocohomepros.com/${cat.slug}` },
+      { "@type": "ListItem", "position": 3, "name": city.name },
+    ],
+  };
 
   // Build FAQPage schema.org JSON-LD if we have FAQs
   const faqSchema = faqs.length > 0 ? {
@@ -77,6 +88,10 @@ export default async function CategoryCityPage({ params, searchParams }: { param
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       {/* Canonical + pagination head */}
       {totalPages > 1 && (
         <head>

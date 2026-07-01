@@ -18,6 +18,20 @@ export default async function HomePage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "JoCo Home Pros",
+          "url": "https://www.jocohomepros.com",
+          "description": "Find trusted home service professionals in Johnson County, Kansas. Compare HVAC, plumbing, roofing, landscaping, and more.",
+          "areaServed": {
+            "@type": "Place",
+            "name": "Johnson County, Kansas",
+          },
+        }) }}
+      />
       {/* Hero — clean, single focus */}
       <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-16 px-4">
         <div className="max-w-5xl mx-auto text-center">
