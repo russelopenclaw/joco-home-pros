@@ -40,7 +40,7 @@ export default async function CategoryCityPage({ params, searchParams }: { param
   const [cat, city, result, faqs, categories, otherCities] = await Promise.all([
     getCategoryBySlug(categorySlug),
     getCityBySlug(citySlug),
-    getBusinesses(catId, cityId, page, 20).catch((): any => ({ businesses: [], total: 0, page: 1, perPage: 20, totalPages: 0 })),
+    getBusinesses(catId, cityId, page, 20).catch((e: any) => { console.error("getBusinesses error:", e?.message || e); return { businesses: [], total: 0, page: 1, perPage: 20, totalPages: 0 }; }),
     getFaqs(catId).catch((): any[] => []),
     getCategories(),
     getCities(),
