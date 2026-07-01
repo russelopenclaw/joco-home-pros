@@ -1,4 +1,4 @@
-import { getBusinessBySlug, getCategoryBySlug, getCityBySlug, getBusinesses, getCategories, getCities } from "@/lib/supabase";
+import { getBusinessBySlug, getCategoryBySlug, getCityBySlug, getBusinesses, getCities } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
 import BusinessDetail from "@/components/BusinessDetail";
 import type { Metadata } from "next";
@@ -76,8 +76,8 @@ export default async function BusinessPage({ params }: { params: Params }) {
       .slice(0, 6);
   }
 
-  // Fetch categories for cross-links
-  const categories = await getCategories();
+  // Fetch cities for cross-links
+  const cities = await getCities();
 
   // Build LocalBusiness schema.org JSON-LD
   const schema: any = {
@@ -123,7 +123,7 @@ export default async function BusinessPage({ params }: { params: Params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
-      <BusinessDetail business={business} category={cat} city={city} related={related} categories={categories} />
+      <BusinessDetail business={business} category={cat} city={city} related={related} cities={cities} />
     </>
   );
 }

@@ -13,13 +13,18 @@ function StarRating({ rating }: { rating: number | null }) {
   );
 }
 
-function HoursDisplay({ hours }: { hours: string[] | null }) {
-  if (!hours || hours.length === 0) return null;
+function HoursDisplay({ hours }: { hours: string[] | string | null }) {
+  if (!hours) return null;
+  // Supabase may return hours as a JSON string or an array
+  const parsed: string[] = typeof hours === "string"
+    ? (() => { try { return JSON.parse(hours); } catch { return [hours]; } })()
+    : hours;
+  if (!Array.isArray(parsed) || parsed.length === 0) return null;
   return (
     <div className="mt-4">
       <h3 className="font-semibold text-gray-800 mb-2">Hours</h3>
       <div className="text-sm text-gray-600 space-y-1">
-        {hours.map((line, i) => (
+        {parsed.map((line, i) => (
           <div key={i} className="flex justify-between max-w-xs">
             <span className="font-medium">{line}</span>
           </div>
@@ -29,12 +34,12 @@ function HoursDisplay({ hours }: { hours: string[] | null }) {
   );
 }
 
-export default function BusinessDetail({ business, category, city, related, categories }: {
+export default function BusinessDetail({ business, category, city, related, cities }: {
   business: any;
   category: any;
   city: any;
   related: any[];
-  categories: any[];
+  cities: any[];
 }) {
   const catSlug = category?.slug || "";
   const citySlug = city?.slug || "";
@@ -81,7 +86,7 @@ export default function BusinessDetail({ business, category, city, related, cate
               )}
             </div>
 
-            {/* Description */}
+            {/* Description — only show if we have real content */}
             {business.description && business.description.trim() && (
               <p className="mt-4 text-gray-700 leading-relaxed text-lg">{business.description}</p>
             )}
@@ -215,16 +220,19 @@ export default function BusinessDetail({ business, category, city, related, cate
         </section>
       )}
 
-      {/* Cross-category links */}
+      {/* Cross-city links for this category */}
       <section className="max-w-5xl mx-auto py-8 px-4">
         <h2 className="text-xl font-bold mb-4">{catName} in Other Johnson County Cities</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {categories.filter((c: any) => c.slug !== catSlug).slice(0, 8).map((c: any) => (
-            <a key={c.slug} href={`/${c.slug}/${citySlug}`}
-              className="border rounded-lg p-3 hover:border-blue-400 transition text-center">
-              <span className="font-medium text-sm">{c.name} in {cityName}</span>
-            </a>
-          ))}
+          {cities
+            .filter((c: any) => c.slug !== citySlug)
+            .slice(0, 8)
+            .map((c: any) => (
+              <a key={c.slug} href={`/${catSlug}/${c.slug}`}
+                className="border rounded-lg p-3 hover:border-blue-400 transition text-center">
+                <span className="font-medium text-sm">{c.name}</span>
+              </a>
+            ))}
         </div>
       </section>
     </>

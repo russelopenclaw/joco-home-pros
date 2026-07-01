@@ -242,39 +242,36 @@ def main():
         if biz.get("editorial_summary"):
             description = biz["editorial_summary"]
         
-        # Build the row
+        # Phone: use formatted if available, else raw
+        phone = biz.get("phone_formatted") or biz.get("phone", "")
+        
+        # Hours: convert list to JSON string if present
+        hours = None
+        if biz.get("hours"):
+            hours = json.dumps(biz["hours"]) if isinstance(biz["hours"], list) else biz["hours"]
+        
+        # Build the row — ALL columns always present to avoid PGRST102 batch errors
         row = {
             "name": biz["name"],
             "slug": biz_slug,
             "category_id": cat["id"],
             "city_id": city["id"],
-            "description": description,
-            "address": biz.get("address", ""),
-            "phone": biz.get("phone", ""),
-            "website": biz.get("website", ""),
+            "description": description or "",
+            "address": biz.get("address", "") or None,
+            "phone": phone or None,
+            "website": biz.get("website", "") or None,
             "is_sponsored": False,
+            "is_verified": False,
             "latitude": biz.get("latitude"),
             "longitude": biz.get("longitude"),
+            "google_place_id": biz.get("google_place_id") or None,
+            "google_rating": biz.get("rating"),
+            "google_review_count": biz.get("review_count", 0),
+            "rating": biz.get("rating"),
+            "review_count": biz.get("review_count", 0),
+            "hours": hours,
+            "image_url": biz.get("image_url") or None,
         }
-        
-        # Google Places data
-        if biz.get("google_place_id"):
-            row["google_place_id"] = biz["google_place_id"]
-            row["google_rating"] = biz.get("rating")
-            row["google_review_count"] = biz.get("review_count", 0)
-            row["rating"] = biz.get("rating")
-            row["review_count"] = biz.get("review_count", 0)
-        else:
-            row["rating"] = biz.get("rating")
-            row["review_count"] = biz.get("review_count", 0)
-        
-        # Enrichment data (hours, photo, phone)
-        if biz.get("hours"):
-            row["hours"] = biz["hours"]  # JSON array of weekday descriptions
-        if biz.get("image_url"):
-            row["image_url"] = biz["image_url"]
-        if biz.get("phone_formatted"):
-            row["phone"] = biz["phone_formatted"]  # Override with formatted phone
         
         business_rows.append(row)
     
