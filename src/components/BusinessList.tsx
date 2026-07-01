@@ -66,7 +66,7 @@ export default function BusinessList({ businesses }: { businesses: any[] }) {
       {sorted.map((biz: any) => (
         <div
           key={biz.id}
-          className={`border rounded-lg p-6 mb-4 ${
+          className={`border rounded-lg p-6 mb-4 hover:shadow-md hover:border-blue-400 transition ${
             biz.is_sponsored ? "border-blue-600 border-2 relative" : ""
           }`}
         >
@@ -75,7 +75,11 @@ export default function BusinessList({ businesses }: { businesses: any[] }) {
               Sponsored
             </div>
           )}
-          <h3 className="text-lg font-bold text-blue-700">{biz.name}</h3>
+          <div className="flex items-start justify-between gap-2">
+            <a href={`/business/${biz.slug}`} className="hover:underline">
+              <h3 className="text-lg font-bold text-blue-700">{biz.name}</h3>
+            </a>
+          </div>
           <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
             <StarRating rating={biz.rating} />
             {biz.review_count > 0 && (
@@ -100,11 +104,12 @@ export default function BusinessList({ businesses }: { businesses: any[] }) {
               ))}
             </div>
           )}
-          <div className="mt-4 flex gap-4">
+          <div className="mt-4 flex items-center gap-4">
             {biz.phone && (
               <a
                 href={`tel:${biz.phone}`}
                 className="text-blue-700 font-semibold text-sm hover:underline"
+                onClick={(e) => e.stopPropagation()}
               >
                 📞 {biz.phone}
               </a>
@@ -115,6 +120,7 @@ export default function BusinessList({ businesses }: { businesses: any[] }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-700 font-semibold text-sm hover:underline"
+                onClick={(e) => e.stopPropagation()}
               >
                 🌐 Visit Website
               </a>
@@ -125,10 +131,17 @@ export default function BusinessList({ businesses }: { businesses: any[] }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-700 font-semibold text-sm hover:underline"
+                onClick={(e) => e.stopPropagation()}
               >
                 📋 Get Free Quote
               </a>
             )}
+            <a
+              href={`/business/${biz.slug}`}
+              className="text-blue-700 font-semibold text-sm hover:underline ml-auto"
+            >
+              View Details →
+            </a>
           </div>
         </div>
       ))}

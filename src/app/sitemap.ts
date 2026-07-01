@@ -1,8 +1,11 @@
 import { categories } from "@/lib/categories";
 import { cities } from "@/lib/cities";
+import { getBusinesses, getCategoryBySlug, getCityBySlug } from "@/lib/supabase";
 import type { MetadataRoute } from "next";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600; // Revalidate every hour
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://jocohomepros.com";
 
   const entries: MetadataRoute.Sitemap = [
@@ -29,7 +32,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
   }
 
-  // Category + City pages (135+ pages)
+  // Category + City pages
   for (const cat of categories) {
     for (const city of cities) {
       entries.push({
@@ -39,6 +42,35 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: 0.7,
       });
     }
+  }
+
+  // Business detail pages (dynamic from Supabase)
+  try {
+    for (const cat of categories) {
+      const catData = await getCategoryBySlug(cat.slug);
+      if (!catData) continue;
+      for (const city of cities) {
+        const cityData = await getCityBySlug(city.slug);
+        if (!cityData) continue;
+        try {
+          const businesses = await getBusinesses(catData.id, cityData.id);
+          for (const biz of businesses) {
+            if (biz.slug) {
+              entries.push({
+                url: `${baseUrl}/business/${biz.slug}`,
+                lastModified: new Date(biz.updated_at || Date.now()),
+                changeFrequency: "monthly",
+                priority: 0.6,
+              });
+            }
+          }
+        } catch {
+          // Skip if no businesses for this combo
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Error fetching businesses for sitemap:", e);
   }
 
   return entries;
