@@ -96,22 +96,22 @@ export async function getBusinesses(categoryId: string, cityId: string, page: nu
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
 
+  // Fetch all matching rows — category/city combos typically have <100 businesses,
+  // so we sort client-side since PostgREST can't order by fields in joined tables.
+  // Pagination is handled client-side after sorting.
   const { data, error, count } = await supabase
     .from("business_cities")
     .select("id, slug, is_primary, businesses!inner(id, name, description, services, phone, website, address, rating, review_count, image_url, is_sponsored, latitude, longitude, category_id), categories!inner(id, slug, name), cities!inner(id, slug, name)", { count: "exact" })
     .eq("category_id", categoryId)
     .eq("city_id", cityId)
     .not("businesses.phone", "is", null)
-    .neq("businesses.phone", "")
-    .order("businesses.is_sponsored", { ascending: false })
-    .order("businesses.rating", { ascending: false })
-    .range(from, to);
+    .neq("businesses.phone", "");
 
   if (error) throw error;
 
   // Flatten the join result to a clean BusinessListing shape
   // PostgREST returns singular objects for single-FK joins, but TS infers arrays
-  const businesses: BusinessListing[] = (data || []).map((row: any) => {
+  const allBusinesses: BusinessListing[] = (data || []).map((row: any) => {
     const b = Array.isArray(row.businesses) ? row.businesses[0] : row.businesses;
     const cat = Array.isArray(row.categories) ? row.categories[0] : row.categories;
     const city = Array.isArray(row.cities) ? row.cities[0] : row.cities;
@@ -135,6 +135,17 @@ export async function getBusinesses(categoryId: string, cityId: string, page: nu
       city: city,
     };
   });
+
+  // Sort: sponsored first, then by rating descending
+  allBusinesses.sort((a, b) => {
+    const aSponsored = a.is_sponsored ? 1 : 0;
+    const bSponsored = b.is_sponsored ? 1 : 0;
+    if (bSponsored !== aSponsored) return bSponsored - aSponsored;
+    return (b.rating || 0) - (a.rating || 0);
+  });
+
+  // Client-side pagination
+  const businesses = allBusinesses.slice(from, to + 1);
 
   return { businesses, total: count || 0, page, perPage, totalPages: Math.ceil((count || 0) / perPage) };
 }
