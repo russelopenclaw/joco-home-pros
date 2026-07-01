@@ -113,7 +113,7 @@ export default async function SlugPage({ params }: { params: Params }) {
           </div>
         </section>
 
-        {city.description && (
+        {city.description && false && (
           <section className="max-w-5xl mx-auto pb-12 px-4">
             <h2 className="text-2xl font-bold mb-4">About {city.name}</h2>
             <p className="text-gray-600 leading-relaxed">{city.description}</p>

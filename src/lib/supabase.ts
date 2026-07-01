@@ -86,24 +86,13 @@ export async function getBusinessBySlug(slug: string) {
   return data;
 }
 
-// Helper: fetch FAQs for a category (not category+city — one set per category for SEO)
+// Helper: fetch FAQs for a category (one set per category, city-agnostic for SEO)
 export async function getFaqs(categoryId: string) {
-  // Get FAQs from the biggest city (Overland Park) as the canonical set for this category
-  // This avoids duplicate/thin content while still having relevant FAQs
-  const { data: opCity } = await supabase
-    .from("cities")
-    .select("id")
-    .eq("slug", "overland-park")
-    .single();
-
-  const cityId = opCity?.id;
-  if (!cityId) return [];
-
   const { data, error } = await supabase
     .from("faqs")
     .select("*")
     .eq("category_id", categoryId)
-    .eq("city_id", cityId);
+    .is("city_id", "null");
   if (error) throw error;
   return data || [];
 }
