@@ -4,6 +4,7 @@ const SITE_NAME = "JoCo Home Pros";
 const SITE_URL = "https://www.jocohomepros.com";
 const SITE_DESCRIPTION =
   "Find the best home service professionals in Johnson County, Kansas. Trusted HVAC, plumbing, roofing, landscaping, and more in Overland Park, Olathe, Lenexa, Leawood, and beyond.";
+const OG_IMAGE = `${SITE_URL}/og-image.png`;
 
 export function generatePageSEO({
   title,
@@ -33,7 +34,7 @@ export function generatePageSEO({
       locale: "en_US",
       images: ogImage
         ? [{ url: ogImage, width: 1200, height: 630, alt: title }]
-        : [],
+        : [{ url: OG_IMAGE, width: 1200, height: 630, alt: `${title} | ${SITE_NAME}` }],
     },
     twitter: {
       card: "summary_large_image",
