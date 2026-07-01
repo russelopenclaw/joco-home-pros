@@ -15,7 +15,6 @@ function StarRating({ rating }: { rating: number | null }) {
 
 function HoursDisplay({ hours }: { hours: string[] | string | null }) {
   if (!hours) return null;
-  // Supabase may return hours as a JSON string or an array
   const parsed: string[] = typeof hours === "string"
     ? (() => { try { return JSON.parse(hours); } catch { return [hours]; } })()
     : hours;
@@ -25,7 +24,7 @@ function HoursDisplay({ hours }: { hours: string[] | string | null }) {
       <h3 className="font-semibold text-gray-800 mb-2">Hours</h3>
       <div className="text-sm text-gray-600 space-y-1">
         {parsed.map((line, i) => (
-          <div key={i} className="flex justify-between max-w-xs">
+          <div key={i} className="flex justify-between max-w-xs sm:max-w-sm">
             <span className="font-medium">{line}</span>
           </div>
         ))}
@@ -49,8 +48,8 @@ export default function BusinessDetail({ business, category, city, related, citi
   return (
     <>
       {/* Breadcrumb */}
-      <section className="bg-gray-50 border-b py-3 px-4">
-        <div className="max-w-5xl mx-auto text-sm text-gray-500">
+      <section className="bg-gray-50 border-b py-2 px-4 sm:py-3">
+        <div className="max-w-5xl mx-auto text-sm text-gray-500 truncate">
           <a href="/" className="hover:text-blue-700">Home</a> ›{" "}
           <a href={`/${catSlug}`} className="hover:text-blue-700">{catName}</a> ›{" "}
           <a href={`/${catSlug}/${citySlug}`} className="hover:text-blue-700">{cityName}</a> ›{" "}
@@ -59,8 +58,8 @@ export default function BusinessDetail({ business, category, city, related, citi
       </section>
 
       {/* Main content */}
-      <section className="max-w-5xl mx-auto py-8 px-4">
-        <div className="grid md:grid-cols-3 gap-8">
+      <section className="max-w-5xl mx-auto py-6 sm:py-8 px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {/* Left: Main info */}
           <div className="md:col-span-2">
             {/* Business photo */}
@@ -69,14 +68,14 @@ export default function BusinessDetail({ business, category, city, related, citi
                 <img
                   src={business.image_url}
                   alt={business.name}
-                  className="w-full h-64 object-cover"
+                  className="w-full h-48 sm:h-64 object-cover"
                   loading="lazy"
                 />
               </div>
             )}
             {/* Business name + rating */}
-            <h1 className="text-3xl font-bold text-gray-900">{business.name}</h1>
-            <div className="flex items-center gap-3 mt-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{business.name}</h1>
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
               <StarRating rating={business.rating} />
               {business.review_count > 0 && (
                 <span className="text-gray-500 text-sm">({business.review_count} reviews)</span>
@@ -86,16 +85,16 @@ export default function BusinessDetail({ business, category, city, related, citi
               )}
             </div>
 
-            {/* Description — only show if we have real content */}
+            {/* Description — only if real content */}
             {business.description && business.description.trim() && (
-              <p className="mt-4 text-gray-700 leading-relaxed text-lg">{business.description}</p>
+              <p className="mt-4 text-gray-700 leading-relaxed">{business.description}</p>
             )}
 
             {/* Contact info */}
             <div className="mt-6 space-y-3">
               {business.phone && (
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">📞</span>
+                  <span className="text-xl sm:text-2xl">📞</span>
                   <a href={`tel:${business.phone}`} className="text-blue-700 text-lg font-semibold hover:underline">
                     {business.phone}
                   </a>
@@ -103,22 +102,22 @@ export default function BusinessDetail({ business, category, city, related, citi
               )}
               {business.website && (
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">🌐</span>
+                  <span className="text-xl sm:text-2xl">🌐</span>
                   <a href={business.website} target="_blank" rel="noopener noreferrer"
-                    className="text-blue-700 hover:underline break-all">
+                    className="text-blue-700 hover:underline break-all text-sm sm:text-base">
                     {business.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
                   </a>
                 </div>
               )}
               {business.address && (
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">📍</span>
-                  <span className="text-gray-700">{business.address}</span>
+                  <span className="text-xl sm:text-2xl">📍</span>
+                  <span className="text-gray-700 text-sm sm:text-base">{business.address}</span>
                 </div>
               )}
               {business.google_maps_url && (
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">🗺️</span>
+                  <span className="text-xl sm:text-2xl">🗺️</span>
                   <a href={business.google_maps_url} target="_blank" rel="noopener noreferrer"
                     className="text-blue-700 hover:underline">
                     Get Directions on Google Maps
@@ -162,17 +161,17 @@ export default function BusinessDetail({ business, category, city, related, citi
               </div>
             )}
 
-            {/* Quick actions */}
-            <div className="mt-4 space-y-3">
+            {/* Quick actions — full width on mobile */}
+            <div className="mt-4 flex flex-col sm:flex-row md:flex-col gap-3">
               {business.phone && (
                 <a href={`tel:${business.phone}`}
-                  className="block w-full text-center bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-800 transition">
+                  className="flex-1 text-center bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-800 transition">
                   📞 Call {business.name}
                 </a>
               )}
               {business.website && (
                 <a href={business.website} target="_blank" rel="noopener noreferrer"
-                  className="block w-full text-center border border-blue-700 text-blue-700 py-3 px-4 rounded-lg font-semibold hover:bg-blue-50 transition">
+                  className="flex-1 text-center border border-blue-700 text-blue-700 py-3 px-4 rounded-lg font-semibold hover:bg-blue-50 transition">
                   🌐 Visit Website
                 </a>
               )}
@@ -195,7 +194,7 @@ export default function BusinessDetail({ business, category, city, related, citi
         <section className="bg-gray-50 py-8 px-4">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-xl font-bold mb-4">Other {catName} in {cityName}</h2>
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {related.map((biz: any) => (
                 <a key={biz.id} href={`/business/${biz.slug}`}
                   className="border rounded-lg p-4 hover:border-blue-400 hover:shadow-sm transition bg-white">

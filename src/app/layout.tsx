@@ -41,25 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-gray-50 text-gray-900 antialiased`}>
-        <header className="border-b border-gray-200 bg-white">
-          <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-            <a href="/" className="flex items-center gap-2 text-xl font-bold text-blue-700">
-              🏠 JoCo Home Pros
-            </a>
-            <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-              <a href="/hvac" className="hover:text-blue-700">HVAC</a>
-              <a href="/plumbing" className="hover:text-blue-700">Plumbing</a>
-              <a href="/roofing" className="hover:text-blue-700">Roofing</a>
-              <a href="/landscaping" className="hover:text-blue-700">Landscaping</a>
-              <a href="/electrician" className="hover:text-blue-700">Electrician</a>
-              <a href="/handyman" className="hover:text-blue-700">Handyman</a>
-              <a href="/categories" className="hover:text-blue-700">All Services →</a>
-            </div>
-            <button className="md:hidden text-gray-600" aria-label="Menu">
-              ☰
-            </button>
-          </nav>
-        </header>
+        <Header />
         <main className="min-h-screen">{children}</main>
         <footer className="border-t border-gray-200 bg-gray-900 text-gray-400">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -102,5 +84,69 @@ export default function RootLayout({
         </footer>
       </body>
     </html>
+  );
+}
+
+function Header() {
+  const navLinks = [
+    { href: "/hvac", label: "HVAC" },
+    { href: "/plumbing", label: "Plumbing" },
+    { href: "/roofing", label: "Roofing" },
+    { href: "/landscaping", label: "Landscaping" },
+    { href: "/electrician", label: "Electrician" },
+    { href: "/handyman", label: "Handyman" },
+    { href: "/categories", label: "All Services →" },
+  ];
+
+  return (
+    <header className="border-b border-gray-200 bg-white">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <a href="/" className="flex items-center gap-2 text-xl font-bold text-blue-700">
+          🏠 JoCo Home Pros
+        </a>
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
+          {navLinks.map((link) => (
+            <a key={link.href} href={link.href} className="hover:text-blue-700">
+              {link.label}
+            </a>
+          ))}
+        </div>
+        {/* Mobile menu toggle */}
+        <button
+          className="md:hidden text-gray-600 p-2 -mr-2"
+          aria-label="Menu"
+          aria-expanded="false"
+          data-mobile-menu-toggle
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+      </nav>
+      {/* Mobile menu dropdown */}
+      <div className="md:hidden hidden border-t border-gray-200 bg-white" data-mobile-menu>
+        <div className="px-4 py-3 space-y-2">
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className="block py-2 text-gray-700 hover:text-blue-700 font-medium"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      </div>
+      <script dangerouslySetInnerHTML={{ __html: `
+        document.querySelector('[data-mobile-menu-toggle]')?.addEventListener('click', function() {
+          var menu = document.querySelector('[data-mobile-menu]');
+          var btn = this;
+          var isOpen = !menu.classList.contains('hidden');
+          menu.classList.toggle('hidden');
+          btn.setAttribute('aria-expanded', !isOpen);
+        });
+      `}} />
+    </header>
   );
 }

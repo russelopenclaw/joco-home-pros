@@ -70,17 +70,17 @@ export default async function CategoryCityPage({ params }: { params: Params }) {
         />
       )}
       {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-12 px-4">
+      <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-8 sm:py-12 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-blue-200 text-sm mb-2">
             <a href="/" className="hover:text-white">Home</a> ›{" "}
             <a href={`/${cat.slug}`} className="hover:text-white">{cat.name}</a> ›{" "}
             <span>{city.name}</span>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">
             Best {cat.name} in {city.name}, KS
           </h1>
-          <p className="mt-4 text-blue-200 max-w-2xl">
+          <p className="mt-3 sm:mt-4 text-blue-200 max-w-2xl text-sm sm:text-base">
             Compare trusted {cat.name.toLowerCase()} serving {city.name}, Kansas.
             Ratings, reviews, and contact info for local professionals.
           </p>
