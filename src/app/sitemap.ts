@@ -53,8 +53,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         const cityData = await getCityBySlug(city.slug);
         if (!cityData) continue;
         try {
-          const businesses = await getBusinesses(catData.id, cityData.id);
-          for (const biz of businesses) {
+          const result = await getBusinesses(catData.id, cityData.id, 1, 1000);
+          for (const biz of result.businesses) {
             if (biz.slug) {
               entries.push({
                 url: `${baseUrl}/business/${biz.slug}`,

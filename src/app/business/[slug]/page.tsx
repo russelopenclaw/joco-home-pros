@@ -69,8 +69,8 @@ export default async function BusinessPage({ params }: { params: Params }) {
   // Fetch related businesses (same category + city, excluding this one)
   let related: any[] = [];
   if (cat && city) {
-    const allBiz = await getBusinesses(cat.id, city.id);
-    related = allBiz
+    const allBiz = await getBusinesses(cat.id, city.id, 1, 100);
+    related = allBiz.businesses
       .filter((b: any) => b.id !== business.id)
       .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
       .slice(0, 6);

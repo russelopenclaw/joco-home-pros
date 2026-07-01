@@ -29,23 +29,26 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   });
 }
 
-export default async function CategoryCityPage({ params }: { params: Params }) {
+export default async function CategoryCityPage({ params, searchParams }: { params: Params; searchParams: Promise<{ page?: string }> }) {
   const { categorySlug, citySlug } = await params;
-  const [cat, city, businesses, faqs, categories] = await Promise.all([
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp.page || "1", 10));
+
+  const catId = (await getCategoryBySlug(categorySlug)).id;
+  const cityId = (await getCityBySlug(citySlug)).id;
+
+  const [cat, city, result, faqs, categories, otherCities] = await Promise.all([
     getCategoryBySlug(categorySlug),
     getCityBySlug(citySlug),
-    getBusinesses(
-      (await getCategoryBySlug(categorySlug)).id,
-      (await getCityBySlug(citySlug)).id
-    ).catch(() => []),
-    getFaqs(
-      (await getCategoryBySlug(categorySlug)).id,
-      (await getCityBySlug(citySlug)).id
-    ).catch(() => []),
+    getBusinesses(catId, cityId, page, 20).catch((): any => ({ businesses: [], total: 0, page: 1, perPage: 20, totalPages: 0 })),
+    getFaqs(catId).catch((): any[] => []),
     getCategories(),
+    getCities(),
   ]);
 
-  const otherCities = await getCities();
+  const businesses = result.businesses || [];
+  const total = result.total || 0;
+  const totalPages = result.totalPages || 0;
 
   // Build FAQPage schema.org JSON-LD if we have FAQs
   const faqSchema = faqs.length > 0 ? {
@@ -61,6 +64,11 @@ export default async function CategoryCityPage({ params }: { params: Params }) {
     })),
   } : null;
 
+  // Pagination links
+  const basePath = `/${cat.slug}/${city.slug}`;
+  const prevPage = page > 1 ? page - 1 : null;
+  const nextPage = page < totalPages ? page + 1 : null;
+
   return (
     <>
       {faqSchema && (
@@ -69,6 +77,14 @@ export default async function CategoryCityPage({ params }: { params: Params }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
+      {/* Canonical + pagination head */}
+      {totalPages > 1 && (
+        <head>
+          {prevPage && <link rel="prev" href={`${basePath}?page=${prevPage}`} />}
+          {nextPage && <link rel="next" href={`${basePath}?page=${nextPage}`} />}
+        </head>
+      )}
+
       {/* Hero */}
       <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-8 sm:py-12 px-4">
         <div className="max-w-5xl mx-auto">
@@ -84,6 +100,11 @@ export default async function CategoryCityPage({ params }: { params: Params }) {
             Compare trusted {cat.name.toLowerCase()} serving {city.name}, Kansas.
             Ratings, reviews, and contact info for local professionals.
           </p>
+          {faqs.length > 0 && (
+            <a href="#faqs" className="inline-block mt-3 text-blue-200 hover:text-white text-sm underline">
+              {cat.name} FAQs ↓
+            </a>
+          )}
         </div>
       </section>
 
@@ -91,11 +112,9 @@ export default async function CategoryCityPage({ params }: { params: Params }) {
       <section className="max-w-5xl mx-auto py-12 px-4">
         <h2 className="text-2xl font-bold mb-6">
           {cat.name} in {city.name}
-          {businesses.length > 0 && (
-            <span className="text-gray-500 text-lg font-normal ml-2">
-              ({businesses.length} {businesses.length === 1 ? "listing" : "listings"})
-            </span>
-          )}
+          <span className="text-gray-500 text-lg font-normal ml-2">
+            ({total} {total === 1 ? "listing" : "listings"})
+          </span>
         </h2>
 
         {businesses.length === 0 && (
@@ -113,6 +132,31 @@ export default async function CategoryCityPage({ params }: { params: Params }) {
 
         {businesses.length > 0 && (
           <BusinessList businesses={businesses} />
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <nav className="flex items-center justify-center gap-2 mt-8" aria-label="Pagination">
+            {prevPage && (
+              <a
+                href={`${basePath}?page=${prevPage}`}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+              >
+                ← Previous
+              </a>
+            )}
+            <span className="text-gray-600 text-sm">
+              Page {page} of {totalPages}
+            </span>
+            {nextPage && (
+              <a
+                href={`${basePath}?page=${nextPage}`}
+                className="px-4 py-2 rounded-lg border border-blue-700 text-blue-700 hover:bg-blue-50 transition font-medium"
+              >
+                Next →
+              </a>
+            )}
+          </nav>
         )}
       </section>
 
@@ -134,11 +178,11 @@ export default async function CategoryCityPage({ params }: { params: Params }) {
       {/* This service in other cities */}
       <section className="max-w-5xl mx-auto py-8 px-4">
         <h2 className="text-xl font-bold mb-4">{cat.name} Across Johnson County</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {otherCities.filter((c: any) => c.slug !== city.slug).map((c: any) => (
             <a key={c.slug} href={`/${cat.slug}/${c.slug}`}
-              className="border rounded-lg p-3 hover:border-blue-400 transition">
-              <span className="font-medium">{cat.name.split(" ")[0]} in {c.name}</span>
+              className="border rounded-lg p-3 hover:border-blue-400 transition text-center">
+              <span className="font-medium text-sm">{c.name}</span>
             </a>
           ))}
         </div>
@@ -146,25 +190,16 @@ export default async function CategoryCityPage({ params }: { params: Params }) {
 
       {/* FAQs */}
       {faqs.length > 0 && (
-        <section className="max-w-5xl mx-auto pb-12 px-4">
-          <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+        <section id="faqs" className="max-w-5xl mx-auto pb-12 px-4">
+          <h2 className="text-2xl font-bold mb-6">{cat.name} FAQs</h2>
           {faqs.map((faq: any) => (
             <div key={faq.id} className="border-b py-4">
               <h3 className="font-semibold">{faq.question}</h3>
-              <p className="text-gray-600 mt-1 leading-relaxed">{faq.answer}</p>
+              <p className="text-gray-600 mt-1 leading-relaxed text-sm sm:text-base">{faq.answer}</p>
             </div>
           ))}
-        </section>
-      )}
-
-      {/* City description for SEO */}
-      {city.description && (
-        <section className="max-w-5xl mx-auto pb-12 px-4">
-          <h2 className="text-2xl font-bold mb-4">About {city.name}</h2>
-          <p className="text-gray-600 leading-relaxed">{city.description}</p>
         </section>
       )}
     </>
   );
 }
-
