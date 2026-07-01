@@ -43,7 +43,6 @@ export interface BusinessListing {
   yelp_rating?: number | null;
   yelp_review_count?: number | null;
   affiliate_url?: string | null;
-  business_status?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 }
@@ -154,7 +153,7 @@ export async function getBusinesses(categoryId: string, cityId: string, page: nu
 export async function getBusinessBySlug(slug: string): Promise<BusinessListing> {
   const { data, error } = await supabase
     .from("business_cities")
-    .select("id, slug, is_primary, businesses(id, name, description, services, phone, website, address, rating, review_count, image_url, is_sponsored, latitude, longitude, category_id, google_place_id, hours, google_rating, google_review_count, yelp_id, yelp_rating, yelp_review_count, affiliate_url, business_status, created_at, updated_at), categories(id, slug, name), cities(id, slug, name)")
+    .select("id, slug, is_primary, businesses!inner(id, name, description, services, phone, website, address, rating, review_count, image_url, is_sponsored, latitude, longitude, category_id, google_place_id, hours, google_rating, google_review_count, yelp_id, yelp_rating, yelp_review_count, affiliate_url, created_at, updated_at), categories!inner(id, slug, name), cities!inner(id, slug, name)")
     .eq("slug", slug)
     .single();
 
@@ -187,7 +186,6 @@ export async function getBusinessBySlug(slug: string): Promise<BusinessListing> 
     yelp_rating: b.yelp_rating,
     yelp_review_count: b.yelp_review_count,
     affiliate_url: b.affiliate_url,
-    business_status: b.business_status,
     created_at: b.created_at,
     updated_at: b.updated_at,
     slug: data.slug,

@@ -176,15 +176,6 @@ export default function BusinessDetail({ business, category, city, related, citi
                 </a>
               )}
             </div>
-
-            {/* Business status */}
-            {business.business_status && (
-              <div className="mt-4 p-3 rounded-lg bg-green-50 border border-green-200">
-                <span className="text-green-700 font-medium">
-                  ✅ {business.business_status === "OPERATIONAL" ? "Open for Business" : business.business_status}
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </section>
