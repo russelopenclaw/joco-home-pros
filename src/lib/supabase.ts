@@ -158,6 +158,44 @@ export async function getBusinesses(categoryId: string, cityId: string, page: nu
 
 // Helper: fetch a single business by canonical slug (from businesses table)
 // Returns the business details + all service areas
+
+// Fetch top-rated businesses across all categories for the homepage.
+// Returns up to `limit` businesses, prioritizing variety across categories.
+export async function getTopRatedBusinesses(limit: number = 8) {
+  const { data, error } = await supabase
+    .from("businesses")
+    .select("id, name, slug, rating, review_count, phone, address, image_url, category_id, categories!inner(id, slug, name)")
+    .not("phone", "is", null)
+    .neq("phone", "")
+    .not("rating", "is", null)
+    .order("rating", { ascending: false })
+    .order("review_count", { ascending: false })
+    .limit(100); // fetch more than needed so we can pick diverse categories
+
+  if (error) throw error;
+
+  // Pick top-rated businesses, ensuring category variety
+  const seen = new Set<string>();
+  const results: any[] = [];
+  for (const row of data || []) {
+    const cat = Array.isArray(row.categories) ? row.categories[0] : row.categories;
+    if (seen.has(cat.slug)) continue;
+    seen.add(cat.slug);
+    results.push({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      rating: row.rating,
+      review_count: row.review_count,
+      category: cat,
+    });
+    if (results.length >= limit) break;
+  }
+  return results;
+}
+
+// Helper: fetch a single business by canonical slug (from businesses table)
+// Returns the business details + all service areas
 export async function getBusinessByCanonicalSlug(canonicalSlug: string): Promise<{ business: BusinessListing; serviceAreas: ServiceArea[] } | null> {
   // 1. Get the business row by canonical slug
   const { data: bizData, error: bizError } = await supabase

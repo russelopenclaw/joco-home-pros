@@ -1,4 +1,4 @@
-import { getCategories, getCities } from "@/lib/supabase";
+import { getCategories, getCities, getTopRatedBusinesses } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
 import { getCategoryIcon } from "@/lib/emojis";
 import type { Metadata } from "next";
@@ -15,6 +15,7 @@ export const revalidate = 3600; // revalidate every hour
 export default async function HomePage() {
   const categories = await getCategories();
   const cities = await getCities();
+  const topRated = await getTopRatedBusinesses(8);
 
   return (
     <>
@@ -41,6 +42,31 @@ export default async function HomePage() {
           <p className="mt-4 text-lg text-blue-200 max-w-2xl mx-auto">
             Compare the best HVAC, plumbing, roofing, landscaping, and home service professionals across JoCo.
           </p>
+        </div>
+      </section>
+
+      {/* Top Rated — direct links to best businesses for crawlability */}
+      <section className="max-w-5xl mx-auto py-12 px-4">
+        <h2 className="text-2xl font-bold mb-6">Top Rated in Johnson County</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {topRated.map((biz: any) => (
+            <a
+              key={biz.id}
+              href={`/business/${biz.slug}`}
+              className="border rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-medium text-gray-500">{biz.category.name}</span>
+              </div>
+              <h3 className="font-semibold text-sm leading-tight">{biz.name}</h3>
+              {biz.rating && (
+                <div className="flex items-center gap-1 mt-2">
+                  <span className="text-yellow-500 text-sm">{"★".repeat(Math.round(biz.rating))}</span>
+                  <span className="text-xs text-gray-500">{biz.rating}{biz.review_count ? ` (${biz.review_count})` : ""}</span>
+                </div>
+              )}
+            </a>
+          ))}
         </div>
       </section>
 
