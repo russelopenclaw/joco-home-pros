@@ -127,6 +127,28 @@ export default async function BusinessPage({ params }: { params: Params }) {
 
   if (business.image_url) schema.image = business.image_url;
 
+  // Add Service schema — describes what this business offers
+  // This helps Google understand the business's offerings for relevant queries
+  if (cat) {
+    schema.hasOfferCatalog = {
+      "@type": "OfferCatalog",
+      "name": `${cat.name} Services`,
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": `${cat.name} in ${primaryCity?.name || 'Johnson County'}`,
+            "areaServed": serviceAreas.map((area) => ({
+              "@type": "City",
+              "name": area.city.name,
+            })),
+          },
+        },
+      ],
+    };
+  }
+
   // Build BreadcrumbList schema
   const breadcrumbSchema = {
     "@context": "https://schema.org",

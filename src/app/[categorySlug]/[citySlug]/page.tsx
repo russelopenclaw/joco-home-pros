@@ -61,7 +61,25 @@ export default async function CategoryCityPage({ params, searchParams }: { param
     ],
   };
 
-  // Build FAQPage schema.org JSON-LD if we have FAQs
+  // Build ItemList schema (Carousel beta eligible — LocalBusiness listings)
+  const itemListSchema = businesses.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "itemListElement": businesses.map((biz: any, i: number) => ({
+      "@type": "ListItem",
+      "position": i + 1 + (page - 1) * 20,
+      "item": {
+        "@type": "LocalBusiness",
+        "name": biz.name,
+        "url": `https://www.jocohomepros.com/business/${biz.slug}`,
+        ...(biz.address ? { "address": { "@type": "PostalAddress", "addressLocality": biz.address.split(",").slice(1, 2).map((s: string) => s.trim())[0] || city.name, "addressRegion": "KS", "addressCountry": "US" } } : {}),
+        ...(biz.phone ? { "telephone": biz.phone } : {}),
+        ...(biz.rating ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": biz.rating, "bestRating": 5, "reviewCount": biz.review_count || 1 } } : {}),
+      },
+    })),
+  } : null;
+
+  // Build BreadcrumbList schema.org JSON-LD
   const faqSchema = faqs.length > 0 ? {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -86,6 +104,12 @@ export default async function CategoryCityPage({ params, searchParams }: { param
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
+      {itemListSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
         />
       )}
       <script
