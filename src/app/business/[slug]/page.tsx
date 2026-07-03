@@ -1,6 +1,7 @@
-import { getBusinessBySlug, getBusinesses, getCities } from "@/lib/supabase";
+import { getBusinessByCanonicalSlug, getBusinesses, getCities, resolveOldSlug } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
 import BusinessDetail from "@/components/BusinessDetail";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const revalidate = 3600; // 1 hour
@@ -15,17 +16,21 @@ const SCHEMA_TYPE = "LocalBusiness";
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
-  const business = await getBusinessBySlug(slug);
-  if (!business) {
+
+  const result = await getBusinessByCanonicalSlug(slug);
+  if (!result) {
     return { title: "Business Not Found" };
   }
-  // category and city are embedded in the business listing now
+
+  const { business, serviceAreas } = result;
   const cat = business.category;
-  const city = business.city;
-  const title = `${business.name} – ${cat?.name || "Home Services"} in ${city?.name || "Johnson County"}, KS`;
+  const primaryCity = serviceAreas.find(a => a.is_primary)?.city || serviceAreas[0]?.city;
+  const cityName = primaryCity?.name || "Johnson County";
+
+  const title = `${business.name} – ${cat?.name || "Home Services"} in ${cityName}, KS`;
   const description = business.description
     ? business.description
-    : `${business.name} – ${cat?.name?.toLowerCase() || "home service"} in ${city?.name || "Johnson County"}, KS.${business.rating ? ` Rated ${business.rating}/5 ⭐ with ${business.review_count} reviews.` : ""} ${business.phone ? `Call ${business.phone}.` : "Get a free quote."}`;
+    : `${business.name} – ${cat?.name?.toLowerCase() || "home service"} in ${cityName}, KS.${business.rating ? ` Rated ${business.rating}/5 ⭐ with ${business.review_count} reviews.` : ""} ${business.phone ? `Call ${business.phone}.` : "Get a free quote."}`;
 
   return generatePageSEO({
     title,
@@ -36,8 +41,18 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export default async function BusinessPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const business = await getBusinessBySlug(slug);
-  if (!business) {
+
+  // Try canonical slug first (new format: /business/superior-service)
+  let result = await getBusinessByCanonicalSlug(slug);
+
+  // If not found, check if it's an old-style slug (e.g. /business/superior-service-hvac-overland-park)
+  // and 301 redirect to the canonical URL
+  if (!result) {
+    const canonicalSlug = await resolveOldSlug(slug);
+    if (canonicalSlug && canonicalSlug !== slug) {
+      redirect(`/business/${canonicalSlug}`);
+    }
+    // Truly not found
     return (
       <div className="max-w-5xl mx-auto py-16 px-4 text-center">
         <h1 className="text-2xl font-bold">Business Not Found</h1>
@@ -47,14 +62,15 @@ export default async function BusinessPage({ params }: { params: Params }) {
     );
   }
 
+  const { business, serviceAreas } = result;
   const cat = business.category;
-  const city = business.city;
-  const schemaType = SCHEMA_TYPE;
+  const primaryCity = serviceAreas.find(a => a.is_primary)?.city || serviceAreas[0]?.city;
+  const primaryArea = serviceAreas.find(a => a.is_primary) || serviceAreas[0];
 
-  // Fetch related businesses (same category + city, excluding this one)
+  // Fetch related businesses (same category + primary city, excluding this one)
   let related: any[] = [];
-  if (cat && city) {
-    const allBiz = await getBusinesses(cat.id, city.id, 1, 100);
+  if (primaryArea) {
+    const allBiz = await getBusinesses(primaryArea.category.id, primaryArea.city.id, 1, 100);
     related = allBiz.businesses
       .filter((b: any) => b.id !== business.id)
       .sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0))
@@ -65,6 +81,7 @@ export default async function BusinessPage({ params }: { params: Params }) {
   const cities = await getCities();
 
   // Build LocalBusiness schema.org JSON-LD
+  const schemaType = SCHEMA_TYPE;
   const schema: any = {
     "@context": "https://schema.org",
     "@type": schemaType,
@@ -77,7 +94,7 @@ export default async function BusinessPage({ params }: { params: Params }) {
     schema.address = {
       "@type": "PostalAddress",
       "streetAddress": parts[0] || "",
-      "addressLocality": parts[1] || city?.name || "",
+      "addressLocality": parts[1] || primaryCity?.name || "",
       "addressRegion": "KS",
       "addressCountry": "US",
     };
@@ -100,7 +117,15 @@ export default async function BusinessPage({ params }: { params: Params }) {
       "longitude": business.longitude,
     };
   }
-  if (cat) schema.areaServed = { "@type": "City", "name": city?.name || "Johnson County" };
+
+  // List ALL service areas in schema (not just primary)
+  if (serviceAreas.length > 0) {
+    schema.areaServed = serviceAreas.map((area) => ({
+      "@type": "City",
+      "name": area.city.name,
+    }));
+  }
+
   if (business.image_url) schema.image = business.image_url;
 
   // Build BreadcrumbList schema
@@ -110,7 +135,7 @@ export default async function BusinessPage({ params }: { params: Params }) {
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.jocohomepros.com" },
       { "@type": "ListItem", "position": 2, "name": cat?.name || "Services", "item": `https://www.jocohomepros.com/${cat?.slug || ""}` },
-      { "@type": "ListItem", "position": 3, "name": city?.name || "", "item": `https://www.jocohomepros.com/${cat?.slug || ""}/${city?.slug || ""}` },
+      { "@type": "ListItem", "position": 3, "name": primaryCity?.name || "", "item": `https://www.jocohomepros.com/${cat?.slug || ""}/${primaryCity?.slug || ""}` },
       { "@type": "ListItem", "position": 4, "name": business.name },
     ],
   };
@@ -125,7 +150,7 @@ export default async function BusinessPage({ params }: { params: Params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <BusinessDetail business={business} category={cat} city={city} related={related} cities={cities} />
+      <BusinessDetail business={business} category={cat} city={primaryCity} serviceAreas={serviceAreas} related={related} cities={cities} />
     </>
   );
 }

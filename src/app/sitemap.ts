@@ -1,6 +1,6 @@
 import { categories } from "@/lib/categories";
 import { cities } from "@/lib/cities";
-import { getBusinesses, getCategoryBySlug, getCityBySlug } from "@/lib/supabase";
+import { getAllBusinessSlugs } from "@/lib/supabase";
 import type { MetadataRoute } from "next";
 
 export const revalidate = 3600; // Revalidate every hour
@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: baseUrl, lastModified: new Date(), changeFrequency: "daily", priority: 1.0 },
   ];
 
-  // Category pages
+  // Category pages (14)
   for (const cat of categories) {
     entries.push({
       url: `${baseUrl}/${cat.slug}`,
@@ -22,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  // City pages
+  // City pages (9)
   for (const city of cities) {
     entries.push({
       url: `${baseUrl}/${city.slug}`,
@@ -32,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  // Category + City pages
+  // Category + City pages (14 × 9 = 126)
   for (const cat of categories) {
     for (const city of cities) {
       entries.push({
@@ -44,33 +44,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  // Business detail pages (from business_cities junction table)
+  // Business detail pages — ONE URL per unique business (canonical slug)
   try {
-    for (const cat of categories) {
-      const catData = await getCategoryBySlug(cat.slug);
-      if (!catData) continue;
-      for (const city of cities) {
-        const cityData = await getCityBySlug(city.slug);
-        if (!cityData) continue;
-        try {
-          const result = await getBusinesses(catData.id, cityData.id, 1, 1000);
-          for (const biz of result.businesses) {
-            if (biz.slug) {
-              entries.push({
-                url: `${baseUrl}/business/${biz.slug}`,
-                lastModified: new Date(biz.updated_at || Date.now()),
-                changeFrequency: "monthly",
-                priority: 0.6,
-              });
-            }
-          }
-        } catch {
-          // Skip if no businesses for this combo
-        }
-      }
+    const slugs = await getAllBusinessSlugs();
+    for (const slug of slugs) {
+      entries.push({
+        url: `${baseUrl}/business/${slug}`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.6,
+      });
     }
   } catch (e) {
-    console.error("Error fetching businesses for sitemap:", e);
+    console.error("Error fetching business slugs for sitemap:", e);
   }
 
   return entries;

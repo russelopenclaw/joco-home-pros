@@ -1,5 +1,7 @@
 "use client";
 
+import type { ServiceArea } from "@/lib/supabase";
+
 function StarRating({ rating }: { rating: number | null }) {
   if (!rating) return null;
   const full = Math.floor(rating);
@@ -33,10 +35,45 @@ function HoursDisplay({ hours }: { hours: string[] | string | null }) {
   );
 }
 
-export default function BusinessDetail({ business, category, city, related, cities }: {
+function ServiceAreas({ areas }: { areas: ServiceArea[] }) {
+  if (!areas || areas.length === 0) return null;
+
+  // Group by category
+  const byCategory = areas.reduce((acc, area) => {
+    const key = area.category.name;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(area);
+    return acc;
+  }, {} as Record<string, ServiceArea[]>);
+
+  return (
+    <div className="mt-6">
+      <h3 className="font-semibold text-gray-800 mb-2">Service Areas</h3>
+      {Object.entries(byCategory).map(([catName, catAreas]) => (
+        <div key={catName} className="mb-3">
+          <span className="text-sm font-medium text-gray-700">{catName}: </span>
+          <div className="inline-flex flex-wrap gap-1.5 mt-0.5">
+            {catAreas.map((area) => (
+              <a
+                key={`${area.category.slug}-${area.city.slug}`}
+                href={`/${area.category.slug}/${area.city.slug}`}
+                className="bg-green-50 text-green-700 text-sm font-medium px-2.5 py-0.5 rounded hover:bg-green-100 transition"
+              >
+                {area.city.name}
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function BusinessDetail({ business, category, city, serviceAreas, related, cities }: {
   business: any;
   category: any;
   city: any;
+  serviceAreas: ServiceArea[];
   related: any[];
   cities: any[];
 }) {
@@ -139,6 +176,9 @@ export default function BusinessDetail({ business, category, city, related, citi
                 </div>
               </div>
             )}
+
+            {/* Service Areas */}
+            <ServiceAreas areas={serviceAreas} />
 
             {/* Hours */}
             <HoursDisplay hours={business.hours} />
