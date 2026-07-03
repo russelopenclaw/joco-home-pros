@@ -11,7 +11,8 @@ type Params = { slug: string };
 // Google's Review Snippet feature only recognizes AggregateRating on a narrow
 // set of parent types (LocalBusiness, Product, Recipe, etc.). Subtypes like
 // HVACBusiness, Plumber, etc. trigger "Invalid object type for field <parent_node>".
-// Use "LocalBusiness" for all listings so Google accepts the aggregateRating.
+// LocalBusiness schema for local search features (name, address, phone, service areas).
+// aggregateRating is intentionally omitted — see note below.
 const SCHEMA_TYPE = "LocalBusiness";
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -102,14 +103,12 @@ export default async function BusinessPage({ params }: { params: Params }) {
 
   if (business.phone) schema.telephone = business.phone;
   if (business.website) schema.url = business.website;
-  if (business.rating) {
-    schema.aggregateRating = {
-      "@type": "AggregateRating",
-      "ratingValue": business.rating,
-      "bestRating": 5,
-      "reviewCount": business.review_count || 0,
-    };
-  }
+  // NOTE: aggregateRating intentionally omitted.
+  // Google's policy since Sept 2019 prohibits self-serving review rich results
+  // on LocalBusiness/Organization pages. Including it triggers
+  // "Invalid object type for field <parent_node>" in Search Console.
+  // The business name, address, phone, and service areas still appear in
+  // local search results via the LocalBusiness schema.
   if (business.latitude && business.longitude) {
     schema.geo = {
       "@type": "GeoCoordinates",

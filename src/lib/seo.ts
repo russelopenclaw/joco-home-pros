@@ -80,15 +80,10 @@ export function generateLocalBusinessSchema(business: {
           longitude: business.longitude,
         },
       }),
-    ...(business.rating &&
-      business.reviewCount && {
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: business.rating,
-          bestRating: 5,
-          reviewCount: business.reviewCount,
-        },
-      }),
+    // NOTE: aggregateRating intentionally omitted.
+    // Google's policy since Sept 2019 prohibits self-serving review rich results
+    // on LocalBusiness/Organization pages. Including it triggers
+    // "Invalid object type for field <parent_node>" in Search Console.
     areaServed: {
       "@type": "City",
       name: business.city,
@@ -132,7 +127,8 @@ export function generateFAQSchema(
   };
 }
 
-// Generate sitemap URLs
+// NOTE: generateSitemapUrls is not used — the app uses src/app/sitemap.ts directly.
+// Kept for reference only.
 export function generateSitemapUrls(
   categories: Array<{ slug: string }>,
   cities: Array<{ slug: string }>,
