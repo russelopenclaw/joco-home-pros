@@ -77,6 +77,7 @@ export interface LocalBusinessSchema {
   aggregateRating?: {
     "@type": "AggregateRating";
     ratingValue: number;
+    bestRating?: number;
     reviewCount: number;
   };
   openingHoursSpecification?: Array<{

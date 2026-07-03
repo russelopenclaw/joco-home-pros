@@ -85,6 +85,7 @@ export function generateLocalBusinessSchema(business: {
         aggregateRating: {
           "@type": "AggregateRating",
           ratingValue: business.rating,
+          bestRating: 5,
           reviewCount: business.reviewCount,
         },
       }),

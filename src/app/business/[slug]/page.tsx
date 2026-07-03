@@ -7,25 +7,11 @@ export const revalidate = 3600; // 1 hour
 
 type Params = { slug: string };
 
-// Schema.org type mapping for LocalBusiness subtypes
-const SCHEMA_TYPE_MAP: Record<string, string> = {
-  hvac: "HVACBusiness",
-  plumbing: "Plumber",
-  roofing: "RoofingContractor",
-  landscaping: "Landscaper",
-  electrician: "Electrician",
-  painting: "HousePainter",
-  "garage-door": "HomeAndConstructionBusiness",
-  "tree-service": "HomeAndConstructionBusiness",
-  windows: "HomeAndConstructionBusiness",
-  "pest-control": "PestControl",
-  "auto-repair": "AutoRepair",
-  dentist: "Dentist",
-  movers: "MovingCompany",
-  cleaning: "CleaningService",
-  pool: "HomeAndConstructionBusiness",
-  handyman: "HomeAndConstructionBusiness",
-};
+// Google's Review Snippet feature only recognizes AggregateRating on a narrow
+// set of parent types (LocalBusiness, Product, Recipe, etc.). Subtypes like
+// HVACBusiness, Plumber, etc. trigger "Invalid object type for field <parent_node>".
+// Use "LocalBusiness" for all listings so Google accepts the aggregateRating.
+const SCHEMA_TYPE = "LocalBusiness";
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
@@ -36,8 +22,6 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   // category and city are embedded in the business listing now
   const cat = business.category;
   const city = business.city;
-  const schemaType = SCHEMA_TYPE_MAP[cat?.slug || ""] || "LocalBusiness";
-
   const title = `${business.name} – ${cat?.name || "Home Services"} in ${city?.name || "Johnson County"}, KS`;
   const description = business.description
     ? business.description
@@ -65,7 +49,7 @@ export default async function BusinessPage({ params }: { params: Params }) {
 
   const cat = business.category;
   const city = business.city;
-  const schemaType = SCHEMA_TYPE_MAP[cat?.slug || ""] || "LocalBusiness";
+  const schemaType = SCHEMA_TYPE;
 
   // Fetch related businesses (same category + city, excluding this one)
   let related: any[] = [];
@@ -105,6 +89,7 @@ export default async function BusinessPage({ params }: { params: Params }) {
     schema.aggregateRating = {
       "@type": "AggregateRating",
       "ratingValue": business.rating,
+      "bestRating": 5,
       "reviewCount": business.review_count || 0,
     };
   }
