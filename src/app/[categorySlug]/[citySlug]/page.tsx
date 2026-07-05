@@ -73,8 +73,7 @@ export default async function CategoryCityPage({ params, searchParams }: { param
         "name": biz.name,
         "url": `https://www.jocohomepros.com/business/${biz.slug}`,
         ...(biz.address ? { "address": { "@type": "PostalAddress", "addressLocality": biz.address.split(",").slice(1, 2).map((s: string) => s.trim())[0] || city.name, "addressRegion": "KS", "addressCountry": "US" } } : {}),
-        ...(biz.phone ? { "telephone": biz.phone } : {}),
-        ...(biz.rating ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": biz.rating, "bestRating": 5, "reviewCount": biz.review_count || 1 } } : {}),
+        ...(biz.phone ? { "telephone": biz.phone } : {})
       },
     })),
   } : null;
