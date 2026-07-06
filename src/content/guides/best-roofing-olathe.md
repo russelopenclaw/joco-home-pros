@@ -79,11 +79,13 @@ We evaluated roofing companies listed on JoCo Home Pros based on ratings, review
 
 ## Roofing Costs in Olathe: What to Expect
 
+Prices below are based on Angi, HomeAdvisor, and local KC-area data for 2025-2026. The KC metro average for asphalt shingle roof replacement is around $15,000 per Robinson Roofing and Angi (1,775 sq ft home).
+
 | Service | Low End | High End | Notes |
 |---|---|---|---|
 | Shingle repair (small area) | $200 | $600 | A few damaged shingles. Quick fix. |
 | Leak repair | $300 | $1,000 | Depends on cause and accessibility. |
-| Full roof replacement (asphalt shingles) | $6,000 | $12,000 | Based on 1,500-2,000 sq ft home. |
+| Full roof replacement (asphalt shingles) | $8,000 | $22,000 | KC metro per Angi. $9,900-16,900 per Best Roofing Estimates for KS. |
 | Full roof replacement (metal) | $12,000 | $25,000 | Lasts 50+ years but costs more upfront. |
 | Gutter installation | $600 | $2,000 | Seamless aluminum is the standard. |
 | Storm damage inspection | Free | $200 | Many companies waive this if you hire them. |

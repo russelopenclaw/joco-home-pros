@@ -72,18 +72,18 @@ We evaluated electricians listed on JoCo Home Pros based on their ratings, revie
 
 ## Electrical Costs in Overland Park: What to Expect
 
+Prices below are based on Angi, HomeAdvisor, and local KC-area data for 2025-2026. Overland Park electricians charge $50-100/hr (Johnson County average per HomeAdvisor and Manta). Most charge a $75-150 service call fee; ask if they credit it toward the job.
+
 | Service | Low End | High End | Notes |
 |---|---|---|---|
 | Outlet installation | $100 | $250 | Per outlet. Adding a circuit costs more. |
 | Ceiling fan installation | $150 | $400 | Includes wiring if there is no existing fixture. |
 | Circuit breaker replacement | $150 | $300 | Per breaker. Panel upgrades cost more. |
-| Panel upgrade (100 to 200 amp) | $1,500 | $3,000 | Required if you are adding an EV charger or major appliance. |
+| Panel upgrade (100 to 200 amp) | $1,350 | $4,950 | Project Cost Atlas for Overland Park. Required for EV charger or major appliance. |
 | EV charger installation | $500 | $1,500 | Depends on panel capacity and distance from panel. |
 | Whole-house generator installation | $3,000 | $6,000 | Electrical side only. Generator costs extra ($3,000-8,000). |
 | Recessed lighting (6 cans) | $800 | $2,000 | Includes wiring and switches. |
 | Code violation repair | $300 | $2,000 | Depends on what the inspector found. |
-
-**Tip:** Electricians charge a service call fee of $75-150. Ask if it is applied to the repair cost. Most will credit it toward the job if you hire them.
 
 ## When You Need an Electrician (and When You Do Not)
 

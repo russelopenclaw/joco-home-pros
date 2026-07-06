@@ -72,6 +72,8 @@ Either way, you want a tree service that knows what they are doing. Bad pruning 
 
 ## Tree Service Costs in Johnson County: What to Expect
 
+Prices below are based on Angi, HomeAdvisor, and local KC-area data for 2025-2026. Tree removal in the Kansas City area averages $400-1,900 per HomeBlue, depending on height and accessibility. Most tree services offer free estimates; always get three.
+
 | Service | Low End | High End | Notes |
 |---|---|---|---|
 | Small tree removal (under 30 ft) | $300 | $800 | Includes cleanup and hauling. |
@@ -81,8 +83,6 @@ Either way, you want a tree service that knows what they are doing. Bad pruning 
 | Stump grinding | $150 | $500 | Per stump. Diameter and root system affect price. |
 | Emergency storm removal | $500 | $5,000+ | Premium pricing. Call during business hours when possible. |
 | Cabling and bracing | $300 | $1,000 | Can save a tree that would cost $1,000+ to remove. |
-
-**Tip:** Most tree services offer free estimates. Get three. Prices vary widely because tree removal involves risk assessment, equipment access, and disposal costs. A tree near power lines or a house costs more than the same tree in an open yard.
 
 ## When to Trim vs. Remove a Tree
 

@@ -83,16 +83,19 @@ Before we get to the list, here is what actually matters when you are picking an
 
 ## HVAC Costs in Overland Park: What to Expect
 
-Here is what you should expect to pay for common HVAC services in Johnson County:
+Prices below are based on Angi, HomeAdvisor, and local KC-area data for 2025-2026. Johnson County runs 10-15% above the national average for labor. Always get multiple quotes.
 
 | Service | Low End | High End | Notes |
 |---|---|---|---|
-| AC repair | $150 | $600 | Depends on the part. Capacitor: $150-300. Compressor: $1,000-2,500. |
-| Furnace repair | $150 | $500 | Blower motor and heat exchanger repairs cost more. |
-| New AC unit (installed) | $3,500 | $7,500 | Depends on SEER rating and home size. |
-| New furnace (installed) | $2,500 | $6,000 | Gas furnaces cost more to install than electric. |
-| Full system replacement | $5,000 | $12,000 | Both AC and furnace. Get multiple quotes. |
-| Annual maintenance plan | $150 | $300 | Usually covers two visits per year. |
+| AC capacitor replacement | $150 | $350 | Most common summer repair. Part is $8-30, labor makes up the rest. |
+| AC fan motor replacement | $300 | $700 | Includes parts and labor. Variable speed motors cost more. |
+| AC compressor replacement | $1,200 | $2,800 | Usually not worth it on a unit over 10 years old. |
+| Refrigerant recharge | $100 | $600 | $100-350 for modern R-410A. Up to $600 for older R-22 units (phased out). |
+| Furnace repair (general) | $150 | $600 | Blower motor: $400-600. Heat exchanger: $600-1,200. |
+| New AC unit (installed) | $4,200 | $7,800 | SEER rating and home size drive the price. KC metro per Angi. |
+| New furnace (installed) | $3,000 | $6,000 | Gas furnaces: $3,500-6,000. Electric: $2,500-5,000. |
+| Full system replacement | $4,600 | $12,000 | Both AC and furnace. KC metro average is around $6,900 per Angi. |
+| Annual maintenance plan | $150 | $350 | Usually two visits per year (spring and fall). |
 
 **Tip:** Always get at least two quotes for system replacements. The price range is wide, and some companies include extras (thermostat, ductwork modifications, permits) that others charge separately for.
 

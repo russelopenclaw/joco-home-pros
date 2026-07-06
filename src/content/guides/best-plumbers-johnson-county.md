@@ -75,6 +75,8 @@ Every company on this list has a 5.0 rating and a minimum of 30 verified reviews
 
 ## Plumbing Costs in Johnson County: What to Expect
 
+Prices below are based on Angi, HomeAdvisor, and local KC-area data for 2025-2026. Johnson County runs 10-15% above the national average for plumbing labor. Most plumbers charge a $65-150 service call fee; ask if they apply it to the repair cost.
+
 | Service | Low End | High End | Notes |
 |---|---|---|---|
 | Faucet repair | $75 | $200 | Usually a quick fix. Replacing the cartridge solves most drips. |
