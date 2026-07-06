@@ -1,6 +1,7 @@
 import { categories } from "@/lib/categories";
 import { cities } from "@/lib/cities";
 import { getAllBusinessSlugs } from "@/lib/supabase";
+import { getAllGuideSlugs } from "@/lib/guides";
 import type { MetadataRoute } from "next";
 
 export const revalidate = 3600; // Revalidate every hour
@@ -42,6 +43,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
       });
     }
+  }
+
+  // Guide / pillar pages
+  for (const slug of getAllGuideSlugs()) {
+    entries.push({
+      url: `${baseUrl}/guides/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    });
   }
 
   // Business detail pages — ONE URL per unique business (canonical slug)

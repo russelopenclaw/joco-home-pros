@@ -110,6 +110,38 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Guides — pillar content for SEO */}
+      <section className="bg-gray-50 py-12 px-4">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl font-bold mb-2">Local Service Guides</h2>
+          <p className="text-gray-600 mb-6">
+            In-depth guides to help you find the right pro for your project.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <a href="/guides/best-hvac-overland-park" className="border bg-white rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition">
+              <h3 className="font-semibold">Best HVAC Companies in Overland Park</h3>
+              <p className="text-sm text-gray-600 mt-1">Top-rated heating and cooling companies compared.</p>
+            </a>
+            <a href="/guides/best-plumbers-johnson-county" className="border bg-white rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition">
+              <h3 className="font-semibold">Best Plumbers in Johnson County</h3>
+              <p className="text-sm text-gray-600 mt-1">Trusted plumbing services across all of JoCo.</p>
+            </a>
+            <a href="/guides/best-roofing-olathe" className="border bg-white rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition">
+              <h3 className="font-semibold">Best Roofing Companies in Olathe</h3>
+              <p className="text-sm text-gray-600 mt-1">Top roofers for repair and replacement.</p>
+            </a>
+            <a href="/guides/best-electricians-overland-park" className="border bg-white rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition">
+              <h3 className="font-semibold">Best Electricians in Overland Park</h3>
+              <p className="text-sm text-gray-600 mt-1">Licensed electrical contractors you can trust.</p>
+            </a>
+            <a href="/guides/best-tree-service-johnson-county" className="border bg-white rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition">
+              <h3 className="font-semibold">Best Tree Service in Johnson County</h3>
+              <p className="text-sm text-gray-600 mt-1">Tree removal, trimming, and stump grinding.</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Trust — brief, 3 columns */}
       <section className="max-w-5xl mx-auto py-12 px-4">
         <div className="grid md:grid-cols-3 gap-8">
