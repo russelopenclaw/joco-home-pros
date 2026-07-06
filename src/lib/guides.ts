@@ -120,8 +120,17 @@ function parseGuide(data: Record<string, any>, content: string): Omit<GuideData,
   // Parse intro
   const introHtml = renderParagraphs(sections["intro"] || "");
 
-  // Parse tips section (bold title lines followed by body)
-  const tipsSection = sections[data.tipsTitle || "What to Know"] || sections["What to Know"] || "";
+  // Find tips section by fuzzy match (key might be "What to Look for in an HVAC Company" etc.)
+  const tipsSectionKey = Object.keys(sections).find((k) =>
+    k.toLowerCase().includes("what to") || k.toLowerCase().includes("know") || k.toLowerCase().includes("look for")
+  ) || "";
+  const tipsSection = tipsSectionKey ? sections[tipsSectionKey] : "";
+
+  // Parse businesses (### entries) — fuzzy match section key containing "top" or "best"
+  const rankingsSectionKey = Object.keys(sections).find((k) =>
+    k.toLowerCase().startsWith("top") || k.toLowerCase().startsWith("best")
+  ) || "";
+  const rankingsSection = rankingsSectionKey ? sections[rankingsSectionKey] : "";
   const tips: GuideTip[] = [];
   const tipLines = tipsSection.split("\n").filter((l) => l.trim());
   let currentTip: GuideTip | null = null;
@@ -136,8 +145,7 @@ function parseGuide(data: Record<string, any>, content: string): Omit<GuideData,
   }
   if (currentTip) tips.push(currentTip);
 
-  // Parse businesses (### entries)
-  const rankingsSection = sections[data.rankingsTitle || "Top"] || "";
+  // Parse businesses (### entries) — use fuzzy-matched rankingsSection
   const businessBlocks = rankingsSection.split(/^### /m).filter((b) => b.trim());
   const businesses: GuideBusiness[] = [];
   for (const block of businessBlocks) {
@@ -204,8 +212,11 @@ function parseGuide(data: Record<string, any>, content: string): Omit<GuideData,
     }
   }
 
-  // Parse questions (numbered list: 1. **Question** Answer)
-  const questionsSection = sections["Questions to Ask"] || sections["Questions to Ask Before Hiring"] || sections["Questions to Ask Your"] || "";
+  // Parse questions (numbered list: 1. **Question** Answer) — fuzzy match section key
+  const questionsSectionKey = Object.keys(sections).find((k) =>
+    k.toLowerCase().includes("question")
+  ) || "";
+  const questionsSection = questionsSectionKey ? sections[questionsSectionKey] : "";
   const questions: GuideQuestion[] = [];
   for (const line of questionsSection.split("\n")) {
     const qMatch = line.match(/^\d+\.\s*\*\*(.+?)\*\*\s*(.*)/);
@@ -216,7 +227,8 @@ function parseGuide(data: Record<string, any>, content: string): Omit<GuideData,
 
   // Parse related cities from links in the content
   const relatedCities: GuideRelatedCity[] = [];
-  const cityRegex = /\/([a-z-]+)\/([a-z-]+)\/?(?:\s|→|\)|$)/g;
+  // Match both [text](/category/city) and /category/city formats
+  const cityRegex = /\/([a-z-]+)\/([a-z-]+)[/\s"')→]/g;
   let match;
   const categorySlug = data.category || "";
   while ((match = cityRegex.exec(content)) !== null) {
