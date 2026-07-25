@@ -37,7 +37,7 @@ export default async function HomePage() {
       <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-16 px-4">
         <div className="max-w-5xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-            Find Trusted Home Pros in Johnson County
+            Find Trusted Home Services in Johnson County, Kansas
           </h1>
           <p className="mt-4 text-lg text-blue-200 max-w-2xl mx-auto">
             Compare the best HVAC, plumbing, roofing, landscaping, and home service professionals across JoCo.

@@ -51,7 +51,7 @@ export default async function GuidePage({ params }: { params: Params }) {
   const otherGuides = allGuides.filter((g) => g.slug !== slug);
   const categorySlug = guide.category;
   const categoryNames: Record<string, string> = {
-    hvac: "HVAC & Heating Cooling",
+    hvac: "HVAC & Heating",
     plumbing: "Plumbing",
     roofing: "Roofing",
     electrician: "Electrician",
@@ -69,6 +69,7 @@ export default async function GuidePage({ params }: { params: Params }) {
             "@type": "Article",
             headline: guide.title,
             description: guide.description,
+            image: "https://www.jocohomepros.com/og-image.png",
             datePublished: guide.published,
             dateModified: guide.published,
             author: {
@@ -80,23 +81,49 @@ export default async function GuidePage({ params }: { params: Params }) {
               "@type": "Organization",
               name: "JoCo Home Pros",
               url: "https://www.jocohomepros.com",
-            },
-            mainEntity: {
-              "@type": "ItemList",
-              itemListElement: (guide.businesses || []).map((biz: any, i: number) => ({
-                "@type": "ListItem",
-                position: i + 1,
-                item: {
-                  "@type": "LocalBusiness",
-                  name: biz.name,
-                  url: `https://www.jocohomepros.com/business/${biz.slug}`,
-                  ...(biz.rating ? { aggregateRating: { "@type": "AggregateRating", ratingValue: biz.rating, reviewCount: biz.reviews } } : {}),
-                },
-              })),
+              logo: {
+                "@type": "ImageObject",
+                url: "https://www.jocohomepros.com/icon.svg",
+              },
             },
           }),
         }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            name: guide.title,
+            itemListElement: (guide.businesses || []).map((biz: any, i: number) => ({
+              "@type": "ListItem",
+              position: i + 1,
+              name: biz.name,
+              url: `https://www.jocohomepros.com/business/${biz.slug}`,
+            })),
+          }),
+        }}
+      />
+      {guide.questions && guide.questions.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: guide.questions.map((faq: any) => ({
+                "@type": "Question",
+                name: faq.q,
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: faq.a,
+                },
+              })),
+            }),
+          }}
+        />
+      )}
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-8 sm:py-12 px-4">

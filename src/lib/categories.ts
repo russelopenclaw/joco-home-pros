@@ -3,7 +3,7 @@ import type { Category } from "./types";
 export const categories: Category[] = [
   {
     id: "hvac",
-    name: "HVAC & Heating Cooling",
+    name: "HVAC & Heating",
     slug: "hvac",
     description:
       "Top-rated HVAC contractors in Johnson County, KS. Expert heating, cooling, and air conditioning repair, installation, and maintenance for Overland Park, Olathe, Lenexa, and surrounding areas.",

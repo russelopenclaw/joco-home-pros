@@ -58,6 +58,20 @@ export default async function SlugPage({ params }: { params: Params }) {
             ],
           }) }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": `${cat.name} in Johnson County, KS`,
+            "itemListElement": cities.map((c: any, i: number) => ({
+              "@type": "ListItem",
+              "position": i + 1,
+              "name": `${cat.name} in ${c.name}`,
+              "url": `https://www.jocohomepros.com/${cat.slug}/${c.slug}`,
+            })),
+          }) }}
+        />
         <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-12 px-4">
           <div className="max-w-5xl mx-auto">
             <div className="text-blue-200 text-sm mb-2">
@@ -108,6 +122,20 @@ export default async function SlugPage({ params }: { params: Params }) {
               { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.jocohomepros.com" },
               { "@type": "ListItem", "position": 2, "name": city.name },
             ],
+          }) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": `Home Services in ${city.name}, KS`,
+            "itemListElement": categories.map((c: any, i: number) => ({
+              "@type": "ListItem",
+              "position": i + 1,
+              "name": `${c.name} in ${city.name}`,
+              "url": `https://www.jocohomepros.com/${c.slug}/${city.slug}`,
+            })),
           }) }}
         />
         <section className="bg-gradient-to-br from-blue-700 to-blue-900 text-white py-12 px-4">
