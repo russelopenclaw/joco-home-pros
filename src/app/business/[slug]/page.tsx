@@ -1,7 +1,7 @@
 import { getBusinessByCanonicalSlug, getBusinesses, getCities, resolveOldSlug } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
 import BusinessDetail from "@/components/BusinessDetail";
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const revalidate = 3600; // 1 hour
@@ -51,7 +51,7 @@ export default async function BusinessPage({ params }: { params: Params }) {
   if (!result) {
     const canonicalSlug = await resolveOldSlug(slug);
     if (canonicalSlug && canonicalSlug !== slug) {
-      redirect(`/business/${canonicalSlug}`);
+      permanentRedirect(`/business/${canonicalSlug}`);
     }
     // Truly not found
     return (
