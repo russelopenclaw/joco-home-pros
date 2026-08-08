@@ -1,7 +1,7 @@
-import { getBusinessByCanonicalSlug, getBusinesses, getCities, resolveOldSlug } from "@/lib/supabase";
+import { getBusinessByCanonicalSlug, getBusinesses, getCities } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
 import BusinessDetail from "@/components/BusinessDetail";
-import { permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
 export const revalidate = 3600; // 1 hour
@@ -46,21 +46,11 @@ export default async function BusinessPage({ params }: { params: Params }) {
   // Try canonical slug first (new format: /business/superior-service)
   let result = await getBusinessByCanonicalSlug(slug);
 
-  // If not found, check if it's an old-style slug (e.g. /business/superior-service-hvac-overland-park)
-  // and 301 redirect to the canonical URL
+  // If not found, this is a truly invalid URL — return 404.
+  // Old-style slugs (e.g., /business/superior-service-hvac-overland-park) are
+  // now handled by static 301 redirects in next.config.ts, so they never reach here.
   if (!result) {
-    const canonicalSlug = await resolveOldSlug(slug);
-    if (canonicalSlug && canonicalSlug !== slug) {
-      permanentRedirect(`/business/${canonicalSlug}`);
-    }
-    // Truly not found
-    return (
-      <div className="max-w-5xl mx-auto py-16 px-4 text-center">
-        <h1 className="text-2xl font-bold">Business Not Found</h1>
-        <p className="mt-4 text-gray-600">We couldn&apos;t find this business. It may have been removed.</p>
-        <a href="/" className="mt-4 inline-block text-blue-700 hover:underline">← Back to Home</a>
-      </div>
-    );
+    return notFound();
   }
 
   const { business, serviceAreas } = result;
