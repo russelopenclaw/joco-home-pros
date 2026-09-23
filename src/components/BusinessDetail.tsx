@@ -99,8 +99,11 @@ export default function BusinessDetail({ business, category, city, serviceAreas,
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {/* Left: Main info */}
           <div className="md:col-span-2">
-            {/* Business photo */}
-            {business.image_url && (
+            {/* Business photo — only render for trusted hosts (Supabase Storage).
+                Legacy Google Places resource paths aren't fetchable URLs (404
+                site-wide; caught by the 2026-09-23 data audit). Pages render
+                clean no-image layout until the refresh script backfills them. */}
+            {business.image_url && business.image_url.includes("/storage/v1/object/public/business-photos/") && (
               <div className="mb-4 rounded-lg overflow-hidden bg-gray-100">
                 <img
                   src={business.image_url}
