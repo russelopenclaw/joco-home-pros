@@ -113,12 +113,13 @@ The gap: there's no **free, simple, local-specific** directory for JoCo. "JoCo H
 
 - [x] Unique title tags per page (`Best HVAC in Overland Park, KS`)
 - [x] Meta descriptions per page
-- [x] Sitemap.xml
+- [x] Sitemap.xml (real per-URL lastmod from updated_at, since 2026-09-23)
 - [x] robots.txt
-- [x] Clean URL structure (`/category/city`)
-- [ ] Schema.org markup (LocalBusiness, AggregateRating, FAQPage)
-- [ ] Individual business detail pages
-- [ ] Canonical URLs
+- [x] Clean URL structure (`/category/city`, path-based pagination `/category/city/2`)
+- [x] Schema.org markup (LocalBusiness, FAQPage; AggregateRating intentionally omitted per Google self-serving policy)
+- [x] Individual business detail pages (1,000 SSG pages, ISR 1h)
+- [x] Canonical URLs
+- [x] Full static/ISR caching of all routes (see docs/caching-architecture.md) — 2026-09-23 root-cause fix for crawl-storm 5xx
 - [ ] Open Graph tags for social sharing
 - [ ] Page speed optimization (Core Web Vitals)
 - [ ] Mobile-first responsive design

@@ -5,18 +5,22 @@ import type { Metadata } from "next";
 
 export const revalidate = 3600;
 
-type Params = { slug: string };
+// Renamed from [slug] to [categorySlug] (2026-09-23): Next requires consistent
+// dynamic-segment names at the same path level; [slug] here vs [categorySlug]
+// in the sibling city route crashed `next start` route matching (Vercel
+// tolerated it, local runtime did not). Param renamed; body unchanged.
+type Params = { categorySlug: string };
 
 export async function generateStaticParams(): Promise<Params[]> {
   const [categories, cities] = await Promise.all([getCategories(), getCities()]);
   const params: Params[] = [];
-  for (const cat of categories) params.push({ slug: cat.slug });
-  for (const city of cities) params.push({ slug: city.slug });
+  for (const cat of categories) params.push({ categorySlug: cat.slug });
+  for (const city of cities) params.push({ categorySlug: city.slug });
   return params;
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const { slug } = await params;
+  const { categorySlug: slug } = await params;
   const cat = await getCategoryBySlug(slug).catch(() => null);
   const city = await getCityBySlug(slug).catch(() => null);
 
@@ -38,7 +42,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 }
 
 export default async function SlugPage({ params }: { params: Params }) {
-  const { slug } = await params;
+  const { categorySlug: slug } = await params;
   const cat = await getCategoryBySlug(slug).catch(() => null);
   const city = await getCityBySlug(slug).catch(() => null);
   const [categories, cities] = await Promise.all([getCategories(), getCities()]);

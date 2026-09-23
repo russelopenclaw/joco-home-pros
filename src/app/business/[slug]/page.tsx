@@ -1,4 +1,4 @@
-import { getBusinessByCanonicalSlug, getBusinesses, getCities } from "@/lib/supabase";
+import { getBusinessByCanonicalSlug, getBusinesses, getCities, getAllBusinessSlugs } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
 import BusinessDetail from "@/components/BusinessDetail";
 import { notFound } from "next/navigation";
@@ -7,6 +7,16 @@ import type { Metadata } from "next";
 export const revalidate = 3600; // 1 hour
 
 type Params = { slug: string };
+
+// Pre-render every business page at build time (ISR revalidates hourly).
+// Without this, Next 16 classified the route Dynamic (per-request rendering,
+// no-store) — every Googlebot hit ran 3+ live Supabase queries, and the
+// post-Aug-17 full-site recrawl storm tripped free-tier Supabase into 5xx,
+// which got pages dropped from the index (GSC emails 2026-09-16).
+export async function generateStaticParams(): Promise<Params[]> {
+  const slugs = await getAllBusinessSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
 // Google's Review Snippet feature only recognizes AggregateRating on a narrow
 // set of parent types (LocalBusiness, Product, Recipe, etc.). Subtypes like

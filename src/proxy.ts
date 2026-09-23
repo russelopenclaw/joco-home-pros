@@ -1015,8 +1015,8 @@ const OLD_SLUG_MAP: Record<string, string> = {
   "ashby-cleaning-service-cleaning-olathe": "ashby-cleaning-service",
 };
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+export function proxy(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl;
 
   // Handle old-style business slug redirects with proper 301 status code
   if (pathname.startsWith("/business/")) {
@@ -1029,9 +1029,27 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // Path-based pagination migration (2026-09-23): /{cat}/{city}?page=N used to
+  // be the pagination URL scheme; it is now /{cat}/{city}/N. Old ?page= URLs
+  // already indexed by Google get a permanent 301 so signals consolidate and
+  // Google re-crawls the new URL shape. ?page=1 collapses to the base URL.
+  const pageParam = searchParams.get("page");
+  if (pageParam) {
+    const pageNum = parseInt(pageParam, 10);
+    if (!Number.isNaN(pageNum) && pageNum > 1 && !pathname.startsWith("/business/")) {
+      const url = request.nextUrl.clone();
+      url.searchParams.delete("page");
+      url.pathname = `${pathname}/${pageNum}`;
+      return NextResponse.redirect(url, 301);
+    }
+    const url = request.nextUrl.clone();
+    url.searchParams.delete("page");
+    return NextResponse.redirect(url, 301);
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/business/:slug*"],
+  matcher: ["/business/:slug*", "/:categorySlug/:citySlug"],
 };

@@ -1,4 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
+import { unstable_cache } from "next/cache";
+
+// Next 16 legacy-model caching (cacheComponents is NOT enabled in this repo).
+// unstable_cache wraps non-fetch data calls so no route ever hits Supabase
+// per-request — even dynamically-rendered paths (on-demand dynamicParams)
+// reuse cached data for REVALIDATE_SEC. Root-cause fix for the Sept 2026
+// 5xx indexing failures (crawl storm + live DB per request). See
+// ~/Documents/jocohomepros-traffic-diagnosis-2026-09-23.md.
+const REVALIDATE_SEC = 3600;
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -55,7 +64,7 @@ export interface ServiceArea {
 }
 
 // Helper: fetch all categories
-export async function getCategories() {
+async function fetchCategories() {
   const { data, error } = await supabase
     .from("categories")
     .select("*")
@@ -63,9 +72,10 @@ export async function getCategories() {
   if (error) throw error;
   return data;
 }
+export const getCategories = unstable_cache(fetchCategories, ["joco-categories-v1"], { revalidate: REVALIDATE_SEC });
 
 // Helper: fetch all cities
-export async function getCities() {
+async function fetchCities() {
   const { data, error } = await supabase
     .from("cities")
     .select("*")
@@ -73,9 +83,10 @@ export async function getCities() {
   if (error) throw error;
   return data;
 }
+export const getCities = unstable_cache(fetchCities, ["joco-cities-v1"], { revalidate: REVALIDATE_SEC });
 
 // Helper: fetch category by slug
-export async function getCategoryBySlug(slug: string) {
+async function fetchCategoryBySlug(slug: string) {
   const { data, error } = await supabase
     .from("categories")
     .select("*")
@@ -84,9 +95,10 @@ export async function getCategoryBySlug(slug: string) {
   if (error) throw error;
   return data;
 }
+export const getCategoryBySlug = unstable_cache(fetchCategoryBySlug, ["joco-category-by-slug-v1"], { revalidate: REVALIDATE_SEC });
 
 // Helper: fetch city by slug
-export async function getCityBySlug(slug: string) {
+async function fetchCityBySlug(slug: string) {
   const { data, error } = await supabase
     .from("cities")
     .select("*")
@@ -95,10 +107,11 @@ export async function getCityBySlug(slug: string) {
   if (error) throw error;
   return data;
 }
+export const getCityBySlug = unstable_cache(fetchCityBySlug, ["joco-city-by-slug-v1"], { revalidate: REVALIDATE_SEC });
 
 // Helper: fetch businesses for a category+city combo with pagination
 // Uses the business_cities junction table for normalized data
-export async function getBusinesses(categoryId: string, cityId: string, page: number = 1, perPage: number = 20) {
+async function fetchBusinesses(categoryId: string, cityId: string, page: number = 1, perPage: number = 20) {
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
 
@@ -155,13 +168,15 @@ export async function getBusinesses(categoryId: string, cityId: string, page: nu
 
   return { businesses, total: count || 0, page, perPage, totalPages: Math.ceil((count || 0) / perPage) };
 }
+// Cached wrapper: args become part of the cache key (per cat+city+page).
+export const getBusinesses = unstable_cache(fetchBusinesses, ["joco-businesses-v1"], { revalidate: REVALIDATE_SEC });
 
 // Helper: fetch a single business by canonical slug (from businesses table)
 // Returns the business details + all service areas
 
 // Fetch top-rated businesses across all categories for the homepage.
 // Returns up to `limit` businesses, prioritizing variety across categories.
-export async function getTopRatedBusinesses(limit: number = 8) {
+async function fetchTopRatedBusinesses(limit: number = 8) {
   const { data, error } = await supabase
     .from("businesses")
     .select("id, name, slug, rating, review_count, phone, address, image_url, category_id, categories!inner(id, slug, name)")
@@ -193,10 +208,12 @@ export async function getTopRatedBusinesses(limit: number = 8) {
   }
   return results;
 }
+// Cached wrapper: homepage only needs fresh data hourly.
+export const getTopRatedBusinesses = unstable_cache(fetchTopRatedBusinesses, ["joco-top-rated-v1"], { revalidate: REVALIDATE_SEC });
 
 // Helper: fetch a single business by canonical slug (from businesses table)
 // Returns the business details + all service areas
-export async function getBusinessByCanonicalSlug(canonicalSlug: string): Promise<{ business: BusinessListing; serviceAreas: ServiceArea[] } | null> {
+async function fetchBusinessByCanonicalSlug(canonicalSlug: string): Promise<{ business: BusinessListing; serviceAreas: ServiceArea[] } | null> {
   // 1. Get the business row by canonical slug
   const { data: bizData, error: bizError } = await supabase
     .from("businesses")
@@ -267,6 +284,14 @@ export async function getBusinessByCanonicalSlug(canonicalSlug: string): Promise
 
   return { business, serviceAreas };
 }
+// Cached wrapper: one DB round-trip max per slug per hour. Business detail
+// pages previously hit Supabase live on every request (no generateStaticParams
+// in Next 16 => dynamic => no-store => crawl storm 5xx).
+export const getBusinessByCanonicalSlug = unstable_cache(
+  fetchBusinessByCanonicalSlug,
+  ["joco-business-by-canonical-slug-v1"],
+  { revalidate: REVALIDATE_SEC }
+);
 
 // Helper: resolve an old-style slug (e.g. "superior-service-hvac-overland-park")
 // to its canonical slug (e.g. "superior-service") for 301 redirects.
@@ -345,7 +370,7 @@ export async function getBusinessBySlug(slug: string): Promise<BusinessListing> 
 }
 
 // Helper: fetch FAQs for a category (one set per category, city-agnostic for SEO)
-export async function getFaqs(categoryId: string) {
+async function fetchFaqs(categoryId: string) {
   const { data, error } = await supabase
     .from("faqs")
     .select("*")
@@ -354,3 +379,21 @@ export async function getFaqs(categoryId: string) {
   if (error) throw error;
   return data || [];
 }
+export const getFaqs = unstable_cache(fetchFaqs, ["joco-faqs-v1"], { revalidate: REVALIDATE_SEC });
+
+// Sitemap helper: canonical slugs + real lastmod timestamps.
+// Uniform fake lastmods (new Date() at render) told Google "every page changed"
+// on every deploy, triggering full-site recrawl storms. Real updated_at values
+// let Google recrawl only what actually changed.
+export const getBusinessSlugsWithLastmod = unstable_cache(
+  async (): Promise<{ slug: string; updated_at: string }[]> => {
+    const { data, error } = await supabase
+      .from("businesses")
+      .select("slug, updated_at")
+      .not("slug", "is", null);
+    if (error) throw error;
+    return (data || []).map((b: any) => ({ slug: b.slug, updated_at: b.updated_at }));
+  },
+  ["joco-business-slugs-lastmod-v1"],
+  { revalidate: REVALIDATE_SEC }
+);
