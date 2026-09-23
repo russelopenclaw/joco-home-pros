@@ -54,6 +54,7 @@ const last10 = (s) => { const d = digits(s); return d.length >= 10 ? d.slice(-10
 const stats = { checked: 0, dataChanged: 0, photoUpdated: 0, closed: 0, apiErrors: 0, noPhoto: 0, skippedUpToDate: 0 };
 const errors = [];
 const changes = [];
+const flaggedClosed = [];
 
 const CHUNK = 8;
 for (let i = 0; i < targets.length; i += CHUNK) {
@@ -82,7 +83,7 @@ for (let i = 0; i < targets.length; i += CHUNK) {
     // and logging — the audit cron surfaces these for manual review.
     if (details.businessStatus && details.businessStatus !== "OPERATIONAL") {
       stats.closed++;
-      if (changes.length < 15) changes.push({ slug: b.slug, changed: `BUSINESS_STATUS=${details.businessStatus} (manual review)` });
+      flaggedClosed.push({ slug: b.slug, name: b.name, status: details.businessStatus, place_id: b.google_place_id });
     }
 
     const newName = details.displayName?.text;
@@ -155,5 +156,9 @@ console.log(`Unchanged:     ${stats.skippedUpToDate}`);
 console.log(`Closed/other:  ${stats.closed} (businessStatus != OPERATIONAL)`);
 console.log(`API errors:    ${stats.apiErrors}`);
 console.log(`Photos:        ${SKIP_PHOTOS ? "skipped" : stats.photoUpdated + " stored"}`);
+if (flaggedClosed.length) {
+  console.log("\n--- FLAGGED: non-operational businesses (manual review) ---");
+  for (const f of flaggedClosed) console.log(`  ${f.status}: ${f.name} (/${f.slug})`);
+}
 if (changes.length) console.log("\nSample changes:", JSON.stringify(changes, null, 1));
 if (errors.length) console.log("\nFirst errors:", JSON.stringify(errors, null, 2));
