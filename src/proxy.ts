@@ -303,15 +303,15 @@ const OLD_SLUG_MAP: Record<string, string> = {
   "w-vielhauer-plumbing-plumbing-prairie-village": "w-vielhauer-plumbing",
   "w-vielhauer-plumbing-plumbing-merriam": "w-vielhauer-plumbing",
   "w-vielhauer-plumbing-plumbing-de-soto": "w-vielhauer-plumbing",
-  "window-genie-of-olathe-windows-overland-park": "window-genie-of-olathe",
-  "window-genie-of-olathe-windows-olathe": "window-genie-of-olathe",
-  "window-genie-of-olathe-windows-lenexa": "window-genie-of-olathe",
-  "window-genie-of-olathe-windows-leawood": "window-genie-of-olathe",
-  "window-genie-of-olathe-windows-shawnee": "window-genie-of-olathe",
-  "window-genie-of-olathe-windows-gardner": "window-genie-of-olathe",
-  "window-genie-of-olathe-windows-prairie-village": "window-genie-of-olathe",
-  "window-genie-of-olathe-windows-merriam": "window-genie-of-olathe",
-  "window-genie-of-olathe-windows-de-soto": "window-genie-of-olathe",
+  "window-genie-of-olathe-windows-overland-park": "/windows/overland-park",
+  "window-genie-of-olathe-windows-olathe": "/windows/overland-park",
+  "window-genie-of-olathe-windows-lenexa": "/windows/overland-park",
+  "window-genie-of-olathe-windows-leawood": "/windows/overland-park",
+  "window-genie-of-olathe-windows-shawnee": "/windows/overland-park",
+  "window-genie-of-olathe-windows-gardner": "/windows/overland-park",
+  "window-genie-of-olathe-windows-prairie-village": "/windows/overland-park",
+  "window-genie-of-olathe-windows-merriam": "/windows/overland-park",
+  "window-genie-of-olathe-windows-de-soto": "/windows/overland-park",
   "mountain-landscaping-landscaping-overland-park": "mountain-landscaping",
   "mountain-landscaping-landscaping-olathe": "mountain-landscaping",
   "mountain-landscaping-landscaping-lenexa": "mountain-landscaping",
@@ -430,15 +430,15 @@ const OLD_SLUG_MAP: Record<string, string> = {
   "d-b-tree-service-llc-tree-service-prairie-village": "d-b-tree-service-llc",
   "d-b-tree-service-llc-tree-service-merriam": "d-b-tree-service-llc",
   "d-b-tree-service-llc-tree-service-de-soto": "d-b-tree-service-llc",
-  "lenexa-mobile-auto-glass-windows-overland-park": "lenexa-mobile-auto-glass",
-  "lenexa-mobile-auto-glass-windows-olathe": "lenexa-mobile-auto-glass",
-  "lenexa-mobile-auto-glass-windows-lenexa": "lenexa-mobile-auto-glass",
-  "lenexa-mobile-auto-glass-windows-leawood": "lenexa-mobile-auto-glass",
-  "lenexa-mobile-auto-glass-windows-shawnee": "lenexa-mobile-auto-glass",
-  "lenexa-mobile-auto-glass-windows-gardner": "lenexa-mobile-auto-glass",
-  "lenexa-mobile-auto-glass-windows-prairie-village": "lenexa-mobile-auto-glass",
-  "lenexa-mobile-auto-glass-windows-merriam": "lenexa-mobile-auto-glass",
-  "lenexa-mobile-auto-glass-windows-de-soto": "lenexa-mobile-auto-glass",
+  "lenexa-mobile-auto-glass-windows-overland-park": "/windows/lenexa",
+  "lenexa-mobile-auto-glass-windows-olathe": "/windows/lenexa",
+  "lenexa-mobile-auto-glass-windows-lenexa": "/windows/lenexa",
+  "lenexa-mobile-auto-glass-windows-leawood": "/windows/lenexa",
+  "lenexa-mobile-auto-glass-windows-shawnee": "/windows/lenexa",
+  "lenexa-mobile-auto-glass-windows-gardner": "/windows/lenexa",
+  "lenexa-mobile-auto-glass-windows-prairie-village": "/windows/lenexa",
+  "lenexa-mobile-auto-glass-windows-merriam": "/windows/lenexa",
+  "lenexa-mobile-auto-glass-windows-de-soto": "/windows/lenexa",
   "el-greas-lawn-mowing-landscaping-overland-park": "el-greas-lawn-mowing",
   "el-greas-lawn-mowing-landscaping-olathe": "el-greas-lawn-mowing",
   "el-greas-lawn-mowing-landscaping-lenexa": "el-greas-lawn-mowing",
@@ -643,7 +643,7 @@ const OLD_SLUG_MAP: Record<string, string> = {
   "johnson-county-tree-tree-service-merriam": "johnson-county-tree",
   "johnson-county-tree-tree-service-de-soto": "johnson-county-tree",
   "s-g-family-dentistry-dentist-leawood": "s-g-family-dentistry",
-  "pro-brake-exhaust-auto-repair-overland-park": "pro-brake-exhaust",
+  "pro-brake-exhaust-auto-repair-overland-park": "/auto-repair/overland-park",
   "emergency-dental-service-dentist-shawnee": "emergency-dental-service",
   "all-tune-lube-auto-repair-olathe": "all-tune-lube",
   "davids-handyman-service-handyman-overland-park": "davids-handyman-service",
@@ -1018,13 +1018,30 @@ const OLD_SLUG_MAP: Record<string, string> = {
 export function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
-  // Handle old-style business slug redirects with proper 301 status code
+  // Trailing-slash normalization (2026-10-27): Next's default for
+  // trailingSlash:false emits a 308 for "/path/" -> "/path". The Aug 2026
+  // fix established that 308s feed GSC's "Page with redirect" report on
+  // this site; old-slug routes were converted to 301 then, but slash
+  // variants of EVERY page (home, category, city, business, guides) still
+  // 308'd whenever Google crawled a slash-terminated URL. Emit 301 instead,
+  // preserving query params; skip the bare root (already 200).
+  if (pathname.length > 1 && pathname !== "/" && pathname.endsWith("/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname.replace(/\/+$/, "");
+    return NextResponse.redirect(url, 301);
+  }
+
+  // Handle old-style business slug redirects with proper 301 status code.
+  // Values starting with "/" are absolute retargets (e.g. removed businesses
+  // from the Oct 2026 data refresh now point at their live category page
+  // instead of 301 -> 404, which GSC flags); everything else is a canonical
+  // business slug.
   if (pathname.startsWith("/business/")) {
     const slug = pathname.replace("/business/", "");
-    const canonicalSlug = OLD_SLUG_MAP[slug];
-    if (canonicalSlug) {
+    const target = OLD_SLUG_MAP[slug];
+    if (target) {
       const url = request.nextUrl.clone();
-      url.pathname = `/business/${canonicalSlug}`;
+      url.pathname = target.startsWith("/") ? target : `/business/${target}`;
       return NextResponse.redirect(url, 301);
     }
   }
