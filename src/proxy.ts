@@ -1026,9 +1026,15 @@ export function proxy(request: NextRequest) {
   // 308'd whenever Google crawled a slash-terminated URL. Emit 301 instead,
   // preserving query params; skip the bare root (already 200).
   if (pathname.length > 1 && pathname !== "/" && pathname.endsWith("/")) {
-    const url = request.nextUrl.clone();
-    url.pathname = pathname.replace(/\/+$/, "");
-    return NextResponse.redirect(url, 301);
+    // NOTE: do NOT use request.nextUrl.clone() here. NextURL is route-aware
+    // and re-applies the ORIGINAL trailing slash when the clone is serialized
+    // to the Location header (pathname mutations to a slash-terminated URL
+    // don't stick), which produced a 301 -> self 301 redirect loop. A plain
+    // WHATWG URL clones the raw request URL and serializes exactly the
+    // pathname we assign.
+    const clean = new URL(request.url);
+    clean.pathname = pathname.replace(/\/+$/, "");
+    return NextResponse.redirect(clean, 301);
   }
 
   // Handle old-style business slug redirects with proper 301 status code.
