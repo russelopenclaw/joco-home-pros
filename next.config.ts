@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  // Next issues its own trailing-slash redirect (308) BEFORE the proxy runs.
+  // Disable it so src/proxy.ts can emit 301s for slash-terminated URLs
+  // (308s feed GSC's "Page with redirect" report — see Aug + Oct 2026 fixes).
+  skipTrailingSlashRedirect: true,
 };
 
 export default nextConfig;
