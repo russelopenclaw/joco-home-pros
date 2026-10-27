@@ -310,15 +310,26 @@ export async function resolveOldSlug(oldSlug: string): Promise<string | null> {
   return row.canonical_slug || (Array.isArray(row.businesses) ? row.businesses[0]?.slug : row.businesses?.slug) || null;
 }
 
-// Helper: fetch all unique business canonical slugs (for sitemap)
+// Helper: fetch all unique business canonical slugs (for sitemap + build).
+// PAGINATED: Supabase caps single requests at 1,000 rows (server default),
+// which silently dropped businesses 1001+ from the sitemap and prerender
+// once the DB passed 1,000 (Oct 2026). Explicit ordering keeps the page
+// window deterministic and the slug list stable across calls.
 export async function getAllBusinessSlugs(): Promise<string[]> {
-  const { data, error } = await supabase
-    .from("businesses")
-    .select("slug")
-    .not("slug", "is", null);
-
-  if (error) throw error;
-  return (data || []).map((b: any) => b.slug);
+  const PAGE = 1000;
+  const slugs: string[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from("businesses")
+      .select("slug")
+      .not("slug", "is", null)
+      .order("slug", { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    (data || []).forEach((b: any) => slugs.push(b.slug));
+    if (!data || data.length < PAGE) break;
+  }
+  return [...new Set(slugs)];
 }
 
 // Keep the old function for backward compatibility during migration
@@ -385,14 +396,29 @@ export const getFaqs = unstable_cache(fetchFaqs, ["joco-faqs-v1"], { revalidate:
 // Uniform fake lastmods (new Date() at render) told Google "every page changed"
 // on every deploy, triggering full-site recrawl storms. Real updated_at values
 // let Google recrawl only what actually changed.
+// PAGINATED (see getAllBusinessSlugs): server caps single requests at 1,000
+// rows; without pagination the sitemap silently stopped growing once the
+// businesses table passed 1,000 (Oct 2026). Ordered paging = complete,
+// deterministic snapshot each revalidate cycle.
 export const getBusinessSlugsWithLastmod = unstable_cache(
   async (): Promise<{ slug: string; updated_at: string }[]> => {
-    const { data, error } = await supabase
-      .from("businesses")
-      .select("slug, updated_at")
-      .not("slug", "is", null);
-    if (error) throw error;
-    return (data || []).map((b: any) => ({ slug: b.slug, updated_at: b.updated_at }));
+    const PAGE = 1000;
+    const out: { slug: string; updated_at: string }[] = [];
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase
+        .from("businesses")
+        .select("slug, updated_at")
+        .not("slug", "is", null)
+        .order("slug", { ascending: true })
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      (data || []).forEach((b: any) => out.push({ slug: b.slug, updated_at: b.updated_at }));
+      if (!data || data.length < PAGE) break;
+    }
+    // Dedup by slug (slug is unique in practice; last-write-wins keeps the
+    // list canonical) — cheap insurance against any upstream dupes.
+    const bySlug = new Map(out.map((r) => [r.slug, r]));
+    return [...bySlug.values()];
   },
   ["joco-business-slugs-lastmod-v1"],
   { revalidate: REVALIDATE_SEC }
