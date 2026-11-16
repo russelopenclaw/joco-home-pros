@@ -1,4 +1,4 @@
-import { getCategories, getCities, getTopRatedBusinesses } from "@/lib/supabase";
+import { getCategories, getCities, getTopRatedBusinesses, getRecentBusinesses } from "@/lib/supabase";
 import { generatePageSEO } from "@/lib/seo";
 import { getCategoryIcon } from "@/lib/emojis";
 import type { Metadata } from "next";
@@ -16,6 +16,11 @@ export default async function HomePage() {
   const categories = await getCategories();
   const cities = await getCities();
   const topRated = await getTopRatedBusinesses(8);
+  const recentRaw = await getRecentBusinesses(16);
+  // Prefer links not already on the page (Top Rated links 8 businesses;
+  // the recent module exists to expose NEW deep URLs to the crawl queue).
+  const topSlugs = new Set(topRated.map((b: any) => b.slug));
+  const recent = recentRaw.filter((b: any) => !topSlugs.has(b.slug)).slice(0, 8);
 
   return (
     <>
@@ -69,6 +74,43 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Recent — rotating deep-links from the latest pipeline batch. The
+          homepage is Google's only reliably-crawled URL; this section feeds
+          newer business pages into the crawl queue each revalidation. */}
+      {recent.length > 0 && (
+        <section className="max-w-5xl mx-auto py-12 px-4">
+          <h2 className="text-2xl font-bold mb-6">New &amp; Recently Updated</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {recent.map((biz: any) => (
+              <a
+                key={biz.id}
+                href={`/business/${biz.slug}`}
+                className="border rounded-lg p-4 hover:border-blue-400 hover:shadow-md transition"
+              >
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-sm font-medium text-gray-500">{biz.category.name}</span>
+                  {biz.updated_at && (
+                    <time
+                      className="text-[11px] text-gray-400"
+                      dateTime={new Date(biz.updated_at).toISOString()}
+                    >
+                      {new Date(biz.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </time>
+                  )}
+                </div>
+                <h3 className="font-semibold text-sm leading-tight">{biz.name}</h3>
+                {biz.rating && (
+                  <div className="flex items-center gap-1 mt-2">
+                    <span className="text-yellow-500 text-sm">{"★".repeat(Math.round(biz.rating))}</span>
+                    <span className="text-xs text-gray-500">{biz.rating}{biz.review_count ? ` (${biz.review_count})` : ""}</span>
+                  </div>
+                )}
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Categories — 4x4 grid */}
       <section className="max-w-5xl mx-auto py-12 px-4">

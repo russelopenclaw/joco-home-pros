@@ -95,6 +95,7 @@ supabase/
 - ✅ Robots.txt
 - ✅ Semantic HTML with proper heading hierarchy
 - ✅ Internal linking between categories and cities
+- ✅ Recently-updated businesses module on the homepage: rotating deep-links from the newest pipeline batch, refreshed hourly via ISR. The homepage is the only URL Google reliably crawls (Nov 2026 crawl-starvation pull); this feeds newer business pages into the crawl queue.
 
 ## Content Generation
 

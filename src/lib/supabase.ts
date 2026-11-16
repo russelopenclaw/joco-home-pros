@@ -211,6 +211,42 @@ async function fetchTopRatedBusinesses(limit: number = 8) {
 // Cached wrapper: homepage only needs fresh data hourly.
 export const getTopRatedBusinesses = unstable_cache(fetchTopRatedBusinesses, ["joco-top-rated-v1"], { revalidate: REVALIDATE_SEC });
 
+// Helper: fetch recently updated businesses for the homepage crawl module.
+// The homepage is Google's only reliably-crawled URL (Nov 2026 pull: deep
+// sitemap starved — most business pages not crawled since July). A rotating
+// deep-link list turns each daily home crawl into a crawl-queue drip for
+// business pages. updated_at moves in pipeline batches (bulk import
+// 2026-07-01, enrichment batches since Nov 1), so the list rotates when the
+// monthly pipeline touches new rows; created_at as the tie-breaker.
+async function fetchRecentBusinesses(limit: number = 16) {
+  const { data, error } = await supabase
+    .from("businesses")
+    .select("id, name, slug, rating, review_count, phone, created_at, updated_at, categories!inner(id, slug, name)")
+    .not("phone", "is", null)
+    .neq("phone", "")
+    .order("updated_at", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data || []).map((row: any) => {
+    const cat = Array.isArray(row.categories) ? row.categories[0] : row.categories;
+    return {
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      rating: row.rating,
+      review_count: row.review_count,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      category: cat,
+    };
+  });
+}
+// Cached wrapper: same hourly cadence as the rest of the homepage data.
+// We fetch 2x the display count so page.tsx can drop entries already
+// linked in Top Rated and still fill the grid.
+export const getRecentBusinesses = unstable_cache(fetchRecentBusinesses, ["joco-recent-businesses-v1"], { revalidate: REVALIDATE_SEC });
+
 // Helper: fetch a single business by canonical slug (from businesses table)
 // Returns the business details + all service areas
 async function fetchBusinessByCanonicalSlug(canonicalSlug: string): Promise<{ business: BusinessListing; serviceAreas: ServiceArea[] } | null> {
